@@ -1,0 +1,18 @@
+import request from '@/utils/request'
+import type { LoginForm, UserInfo } from '@/types'
+
+// 登录接口
+export const loginApi = (data: LoginForm) => {
+  // 根据后端实际接口路径修改
+  return request.post<{ token: string; userInfo: UserInfo }>('/auth/login', data)
+}
+
+// 登出接口
+export const logoutApi = () => {
+  return request.post('/auth/logout')
+}
+
+// 获取用户信息
+export const getUserInfoApi = () => {
+  return request.get<UserInfo>('/user/info')
+}
