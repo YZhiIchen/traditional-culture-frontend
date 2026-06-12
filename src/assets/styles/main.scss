@@ -1,0 +1,299 @@
+// ═══════════════════════════════════════════
+// 传统文化数字化平台 — 全局样式
+// ═══════════════════════════════════════════
+
+@use './theme.scss';
+
+// ── 基础重置 ──
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  font-family: var(--font-body);
+  color: var(--text-primary);
+  background-color: var(--bg-body);
+}
+
+#app {
+  width: 100%;
+  height: 100%;
+}
+
+// ── 全局背景装饰 ──
+// 水墨晕染背景层（所有页面共用）
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  background:
+    // 远山渐变
+    radial-gradient(ellipse 140% 60% at 0% 100%, rgba(90, 90, 122, 0.06) 0%, transparent 60%),
+    radial-gradient(ellipse 120% 50% at 100% 80%, rgba(201, 169, 110, 0.04) 0%, transparent 50%),
+    radial-gradient(ellipse 80% 60% at 50% 0%, rgba(201, 169, 110, 0.03) 0%, transparent 50%);
+}
+
+// ── 装饰性云纹（固定背景层）──
+body::after {
+  content: '';
+  position: fixed;
+  top: -20%;
+  right: -5%;
+  width: 400px;
+  height: 400px;
+  z-index: -1;
+  opacity: 0.03;
+  // 云纹 SVG 装饰
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 120'%3E%3Cpath d='M40 80 Q20 80 20 70 Q20 55 35 55 Q35 40 50 40 Q55 25 70 25 Q90 25 95 40 Q110 40 110 55 Q125 55 125 70 Q125 80 110 80Z' fill='%23c9a96e'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-size: contain;
+  pointer-events: none;
+}
+
+// ── 滚动条（中式风格）──
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--ink-300);
+  border-radius: 3px;
+  transition: background var(--transition-fast);
+
+  &:hover {
+    background: var(--ink-400);
+  }
+}
+
+// ── 选中颜色（朱砂红）──
+::selection {
+  background: rgba(194, 59, 34, 0.15);
+  color: var(--text-primary);
+}
+
+// ═══════════════════════════════════════════
+// 全局动画
+// ═══════════════════════════════════════════
+
+// 淡入上滑
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// 淡入
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+// 淡入缩放
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+// 从左滑入
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+// 从右滑入
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+// 水墨晕染扩散
+@keyframes inkSpread {
+  from {
+    clip-path: circle(0% at 50% 50%);
+    opacity: 0;
+  }
+  to {
+    clip-path: circle(100% at 50% 50%);
+    opacity: 1;
+  }
+}
+
+// 渐入 + 扩散（用于路由切换）
+@keyframes routeEnter {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+    filter: blur(2px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+// 闪烁（用于加载占位）
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+// ── 通用动画类 ──
+.animate-fade-in-up {
+  animation: fadeInUp var(--transition-slow) both;
+}
+
+.animate-fade-in {
+  animation: fadeIn var(--transition-normal) both;
+}
+
+.animate-fade-in-scale {
+  animation: fadeInScale var(--transition-slow) both;
+}
+
+.animate-slide-in-left {
+  animation: slideInLeft 0.4s ease both;
+}
+
+.animate-slide-in-right {
+  animation: slideInRight 0.4s ease both;
+}
+
+// 入场延缓
+.delay-1  { animation-delay: 0.1s; }
+.delay-2  { animation-delay: 0.2s; }
+.delay-3  { animation-delay: 0.3s; }
+.delay-4  { animation-delay: 0.4s; }
+.delay-5  { animation-delay: 0.5s; }
+.delay-6  { animation-delay: 0.6s; }
+.delay-7  { animation-delay: 0.7s; }
+.delay-8  { animation-delay: 0.8s; }
+
+// ── 装饰性底纹 ──
+// 宣纸纹理（覆盖在 card 上）
+.rice-paper {
+  position: relative;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    border-radius: inherit;
+    pointer-events: none;
+  }
+}
+
+// 印章样式
+.seal-stamp {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border: 2px solid var(--cinnabar);
+  border-radius: 4px;
+  color: var(--cinnabar);
+  font-family: var(--font-heading);
+  font-size: 12px;
+  writing-mode: vertical-rl;
+  transform: rotate(2deg);
+  opacity: 0.85;
+  user-select: none;
+}
+
+// --- 水墨卡片装饰 ---
+.ink-ornament {
+  position: absolute;
+  pointer-events: none;
+  opacity: 0.03;
+}
+
+// ═══════════════════════════════════════════
+// Element Plus 覆盖
+// ═══════════════════════════════════════════
+
+// Card
+.el-card {
+  --el-card-padding: 20px;
+  --el-card-border-radius: var(--radius-lg);
+  --el-card-border-color: var(--border-color);
+  background: var(--bg-card) !important;
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow var(--transition-normal), transform var(--transition-normal);
+
+  &:hover {
+    box-shadow: var(--shadow-md);
+  }
+}
+
+// Button
+.el-button--primary {
+  --el-button-bg-color: var(--cinnabar) !important;
+  --el-button-border-color: var(--cinnabar) !important;
+  --el-button-hover-bg-color: var(--color-primary-hover) !important;
+  --el-button-hover-border-color: var(--color-primary-hover) !important;
+  --el-button-active-bg-color: var(--color-primary-active) !important;
+  --el-button-active-border-color: var(--color-primary-active) !important;
+}
+
+// Menu
+.el-menu-item.is-active {
+  background: rgba(194, 59, 34, 0.12) !important;
+}
+
+// Tag
+.el-tag--primary {
+  --el-tag-bg-color: var(--cinnabar-100) !important;
+  --el-tag-border-color: transparent !important;
+  --el-tag-text-color: var(--cinnabar) !important;
+}
+
+// Input focus
+.el-input__wrapper.is-focus {
+  border-color: var(--cinnabar) !important;
+  box-shadow: 0 0 0 1px var(--cinnabar) inset !important;
+}

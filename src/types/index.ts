@@ -28,6 +28,7 @@ export interface RecognitionResult {
   fileId: string
   fileName: string
   fileType: string
+  fileUrl?: string
   recognitionTime: string
   result: {
     title?: string

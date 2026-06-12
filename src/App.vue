@@ -1,13 +1,44 @@
 <template>
-  <router-view />
+  <router-view v-slot="{ Component, route: r }">
+    <transition
+      :name="transitionName"
+      mode="out-in"
+      appear
+    >
+      <component :is="Component" :key="r.path" />
+    </transition>
+  </router-view>
 </template>
 
 <script setup lang="ts">
+import { ref, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import { useAppStore } from '@/stores/app'
 import { storeToRefs } from 'pinia'
 
+const route = useRoute()
 const appStore = useAppStore()
 const { theme } = storeToRefs(appStore)
+
+// 路由过渡类型
+const transitionName = ref<'fade-slide' | 'fade'>('fade')
+
+// 根据路由深度或方向切换过渡
+watch(
+  () => route.path,
+  (to, from) => {
+    if (!from) {
+      transitionName.value = 'fade'
+      return
+    }
+    // 登录页进主页用 fade-slide，其他用 fade
+    if (from === '/login' || to === '/login') {
+      transitionName.value = 'fade'
+    } else {
+      transitionName.value = 'fade-slide'
+    }
+  }
+)
 
 // 监听主题变化
 if (theme.value === 'dark') {
@@ -15,53 +46,29 @@ if (theme.value === 'dark') {
 }
 </script>
 
-<style>
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+<style lang="scss">
+// ── 路由过渡动画 ──
+
+// Fade + Slide
+.fade-slide-enter-active {
+  animation: routeEnter 0.4s ease both;
 }
 
-html, body {
-  width: 100%;
-  height: 100%;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+.fade-slide-leave-active {
+  animation: routeEnter 0.25s ease reverse both;
 }
 
-#app {
-  width: 100%;
-  height: 100%;
+// Simple fade
+.fade-enter-active {
+  transition: opacity 0.3s ease;
 }
 
-/* 滚动条样式 */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+.fade-leave-active {
+  transition: opacity 0.2s ease;
 }
 
-::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb {
-  background: #c1c1c1;
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #a8a8a8;
-}
-
-/* 暗色主题 */
-[data-theme="dark"] {
-  --bg-color: #1a1a1a;
-  --text-color: #e8e8e8;
-  --border-color: #333;
-}
-
-[data-theme="dark"] body {
-  background: var(--bg-color);
-  color: var(--text-color);
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
 }
 </style>

@@ -1,23 +1,30 @@
 <template>
   <el-container class="layout-container">
     <!-- 侧边栏 -->
-    <el-aside :width="sidebarCollapsed ? '64px' : '220px'" class="layout-aside">
+    <el-aside
+      :width="sidebarCollapsed ? '64px' : '240px'"
+      class="layout-aside"
+    >
       <Sidebar :collapsed="sidebarCollapsed" />
     </el-aside>
 
-    <el-container>
+    <el-container class="layout-main-area">
       <!-- 顶部导航栏 -->
-      <el-header class="layout-header">
-        <Navbar @toggle-sidebar="toggleSidebar" />
+      <el-header class="layout-header" :class="{ collapsed: sidebarCollapsed }">
+        <Navbar @toggle-sidebar="appStore.toggleSidebar()" />
       </el-header>
 
-      <!-- 主内容区 -->
+      <!-- 主要内容区（带路由过渡动画） -->
       <el-main class="layout-main">
-        <router-view v-slot="{ Component }">
-          <keep-alive>
-            <component :is="Component" />
-          </keep-alive>
-        </router-view>
+        <div class="main-content">
+          <router-view v-slot="{ Component }">
+            <transition name="page" mode="out-in" appear>
+              <keep-alive>
+                <component :is="Component" />
+              </keep-alive>
+            </transition>
+          </router-view>
+        </div>
       </el-main>
     </el-container>
   </el-container>
@@ -31,38 +38,89 @@ import Navbar from './Navbar.vue'
 
 const appStore = useAppStore()
 const { sidebarCollapsed } = storeToRefs(appStore)
-
-const toggleSidebar = () => {
-  appStore.toggleSidebar()
-}
 </script>
 
 <style scoped lang="scss">
 .layout-container {
   height: 100vh;
   overflow: hidden;
+  background: var(--bg-main);
 }
 
 .layout-aside {
-  background: linear-gradient(180deg, #1a1a2e 0%, #16213e 100%);
-  color: #fff;
-  transition: width 0.3s ease;
-  overflow-x: hidden;
-  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+  position: relative;
+  background: var(--bg-sidebar);
+  color: var(--text-inverse);
+  transition: width var(--transition-slow);
+  overflow: hidden;
+  z-index: 100;
+  box-shadow: 2px 0 20px rgba(0, 0, 0, 0.15);
+}
+
+.layout-main-area {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .layout-header {
-  background: #fff;
-  border-bottom: 1px solid #e8e8e8;
+  height: 60px !important;
   padding: 0;
-  height: 60px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+  flex-shrink: 0;
+  position: relative;
+  z-index: 50;
+  transition: all var(--transition-normal);
+
+  &.collapsed {
+    // 侧栏折叠时 header 视觉微调
+  }
 }
 
 .layout-main {
-  background: #f5f7fa;
-  padding: 20px;
+  flex: 1;
+  padding: 24px;
   overflow-y: auto;
-  height: calc(100vh - 60px);
+  overflow-x: hidden;
+  position: relative;
+
+  .main-content {
+    max-width: 1400px;
+    margin: 0 auto;
+    min-height: 100%;
+    position: relative;
+  }
+}
+
+// ═══════════════════════════════════════
+// 页面过渡动画（Layout 内部路由）
+// ═══════════════════════════════════════
+.page-enter-active {
+  animation: pageEnter 0.35s ease both;
+}
+
+.page-leave-active {
+  animation: pageLeave 0.25s ease both;
+}
+
+@keyframes pageEnter {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pageLeave {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
 }
 </style>

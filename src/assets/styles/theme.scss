@@ -1,0 +1,108 @@
+// ═══════════════════════════════════════════
+// 传统文化数字化平台 — 主题色系统
+// 水墨 / 朱砂 / 宣纸 — 经典中式美学
+// ═══════════════════════════════════════════
+
+:root {
+  // ── 主色调（水墨语境）──
+  --ink-900: #1a1a2e;        // 浓墨
+  --ink-800: #2d2d44;        // 中墨
+  --ink-700: #3d3d5c;        // 淡墨
+  --ink-600: #5a5a7a;        // 远山灰
+  --ink-500: #7c7c9a;        // 烟灰
+  --ink-400: #a0a0b8;        // 薄雾
+  --ink-300: #c4c4d4;        // 轻烟
+  --ink-200: #e0e0ec;        // 缟素
+  --ink-100: #f0f0f5;        // 雪白
+  --ink-50:  #f7f7fa;        // 宣纸底
+
+  // ── 传统文化色彩 ──
+  --cinnabar:    #c23b22;    // 朱砂红（主色）
+  --cinnabar-50: #fef2f0;    // 朱砂淡
+  --cinnabar-100:#fce8e4;   // 朱砂极淡
+
+  --gold:        #c9a96e;    // 金色
+  --gold-light:  #e8d5a3;    // 淡金
+  --gold-pale:   #f5eddb;    // 金粉
+
+  --celadon:     #7aab8c;    // 青瓷绿
+  --celadon-50:  #edf5ef;    // 青瓷淡
+
+  --azure:       #5b7fa5;    // 青花蓝
+  --azure-50:    #eef4f9;    // 青花淡
+
+  --vermillion:  #d45d3a;    // 赭石
+
+  // ── 语义色（覆盖 Element Plus）──
+  --color-primary:       var(--cinnabar);
+  --color-primary-hover: #d64a30;
+  --color-primary-active:#a8341e;
+  --color-primary-light: var(--cinnabar-50);
+  --color-success:       var(--celadon);
+  --color-warning:       #d4a84b;
+  --color-danger:        #c23b22;
+  --color-info:          var(--ink-400);
+
+  // ── 背景系统 ──
+  --bg-body:           var(--ink-50);
+  --bg-card:           rgba(255, 255, 255, 0.92);
+  --bg-card-solid:     #ffffff;
+  --bg-sidebar:        linear-gradient(180deg, #2c1810 0%, #1a0f0a 100%);
+  --bg-header:         rgba(255, 255, 255, 0.85);
+  --bg-main:           #f5f3ee;
+
+  // ── 文字系统 ──
+  --text-primary:      var(--ink-900);
+  --text-regular:      var(--ink-700);
+  --text-secondary:    var(--ink-500);
+  --text-placeholder:  var(--ink-300);
+  --text-inverse:      #f5f0e8;
+
+  // ── 边框 ──
+  --border-color:      rgba(44, 24, 16, 0.08);
+  --border-light:      rgba(44, 24, 16, 0.04);
+
+  // ── 阴影 ──
+  --shadow-sm:   0 1px 3px rgba(44, 24, 16, 0.06);
+  --shadow-md:   0 4px 12px rgba(44, 24, 16, 0.08);
+  --shadow-lg:   0 8px 24px rgba(44, 24, 16, 0.12);
+  --shadow-xl:   0 16px 48px rgba(44, 24, 16, 0.16);
+
+  // ── 圆角 ──
+  --radius-sm:  4px;
+  --radius-md:  8px;
+  --radius-lg:  12px;
+  --radius-xl:  16px;
+
+  // ── 字体 ──
+  --font-heading:  'Noto Serif SC', 'Source Han Serif SC', 'STSong', 'SimSun', serif;
+  --font-body:     -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+
+  // ── 过渡 ──
+  --transition-fast:   0.2s ease;
+  --transition-normal: 0.3s ease;
+  --transition-slow:   0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-spring: 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+// ── 暗色主题 ──
+[data-theme='dark'] {
+  --bg-body:           #0d0d0d;
+  --bg-card:           rgba(26, 26, 26, 0.92);
+  --bg-card-solid:     #1a1a1a;
+  --bg-header:         rgba(26, 26, 26, 0.85);
+  --bg-main:           #111111;
+
+  --text-primary:      #e8e0d0;
+  --text-regular:      #c0b8a8;
+  --text-secondary:    #8a8278;
+  --text-placeholder:  #5a5248;
+
+  --border-color:      rgba(200, 180, 160, 0.12);
+  --border-light:      rgba(200, 180, 160, 0.06);
+
+  --shadow-sm:  0 1px 3px rgba(0, 0, 0, 0.3);
+  --shadow-md:  0 4px 12px rgba(0, 0, 0, 0.4);
+  --shadow-lg:  0 8px 24px rgba(0, 0, 0, 0.5);
+  --shadow-xl:  0 16px 48px rgba(0, 0, 0, 0.6);
+}
