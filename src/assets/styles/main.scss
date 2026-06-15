@@ -1,5 +1,6 @@
 // ═══════════════════════════════════════════
 // 传统文化数字化平台 — 全局样式
+// Contemporary Shanshui — 当代山水美学
 // ═══════════════════════════════════════════
 
 @use './theme.scss';
@@ -17,14 +18,17 @@ html {
   font-size: 16px;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
 html, body {
   width: 100%;
   height: 100%;
   font-family: var(--font-body);
+  font-weight: 400;
   color: var(--text-primary);
   background-color: var(--bg-body);
+  line-height: 1.6;
 }
 
 #app {
@@ -32,41 +36,82 @@ html, body {
   height: 100%;
 }
 
-// ── 全局背景装饰 ──
-// 水墨晕染背景层（所有页面共用）
+// ── 氛围背景层 ──
 body::before {
   content: '';
   position: fixed;
   inset: 0;
   z-index: -2;
+  pointer-events: none;
   background:
-    // 远山渐变
-    radial-gradient(ellipse 140% 60% at 0% 100%, rgba(90, 90, 122, 0.06) 0%, transparent 60%),
-    radial-gradient(ellipse 120% 50% at 100% 80%, rgba(201, 169, 110, 0.04) 0%, transparent 50%),
-    radial-gradient(ellipse 80% 60% at 50% 0%, rgba(201, 169, 110, 0.03) 0%, transparent 50%);
+    // 左上暖光
+    radial-gradient(
+      ellipse 60% 50% at 0% 0%,
+      oklch(92% 0.02 75 / 0.15) 0%,
+      transparent 70%
+    ),
+    // 右下冷光
+    radial-gradient(
+      ellipse 50% 40% at 100% 100%,
+      oklch(88% 0.015 200 / 0.08) 0%,
+      transparent 60%
+    ),
+    // 中央柔和过渡
+    radial-gradient(
+      ellipse 80% 70% at 50% 50%,
+      transparent 0%,
+      oklch(85% 0.005 55 / 0.03) 100%
+    );
 }
 
-// ── 装饰性云纹（固定背景层）──
+[data-theme='dark'] body::before {
+  background:
+    radial-gradient(
+      ellipse 50% 40% at 0% 0%,
+      oklch(20% 0.02 55 / 0.15) 0%,
+      transparent 60%
+    ),
+    radial-gradient(
+      ellipse 40% 30% at 100% 80%,
+      oklch(18% 0.015 30 / 0.1) 0%,
+      transparent 50%
+    );
+}
+
+// ── 装饰性山形剪影（固定）──
 body::after {
   content: '';
   position: fixed;
-  top: -20%;
-  right: -5%;
-  width: 400px;
-  height: 400px;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 120px;
   z-index: -1;
-  opacity: 0.03;
-  // 云纹 SVG 装饰
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 120'%3E%3Cpath d='M40 80 Q20 80 20 70 Q20 55 35 55 Q35 40 50 40 Q55 25 70 25 Q90 25 95 40 Q110 40 110 55 Q125 55 125 70 Q125 80 110 80Z' fill='%23c9a96e'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-size: contain;
   pointer-events: none;
+  opacity: 0.025;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 120'%3E%3Cpath d='M0 120 L0 80 Q72 60 144 70 Q216 80 288 55 Q360 30 432 50 Q504 70 576 40 Q648 10 720 35 Q792 60 864 42 Q936 24 1008 48 Q1080 72 1152 50 Q1224 28 1296 55 Q1368 82 1440 60 L1440 120 Z' fill='%23c23b22'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+  background-position: bottom;
 }
 
-// ── 滚动条（中式风格）──
+[data-theme='dark'] body::after {
+  opacity: 0.04;
+}
+
+// ── 水墨晕染纹理（固定，极淡）──
+.ambient-ink {
+  position: fixed;
+  border-radius: 50%;
+  filter: blur(80px);
+  pointer-events: none;
+  z-index: -1;
+}
+
+// ── 滚动条（中式细线风格）──
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 
 ::-webkit-scrollbar-track {
@@ -83,88 +128,70 @@ body::after {
   }
 }
 
-// ── 选中颜色（朱砂红）──
+// ── 选中颜色（朱砂淡染）──
 ::selection {
-  background: rgba(194, 59, 34, 0.15);
+  background: oklch(50% 0.16 28 / 0.18);
   color: var(--text-primary);
 }
 
-// ═══════════════════════════════════════════
-// 全局动画
-// ═══════════════════════════════════════════
-
-// 淡入上滑
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+// ── Focus-visible 统一风格 ──
+:focus-visible {
+  outline: 2px solid var(--cinnabar);
+  outline-offset: 2px;
+  border-radius: 2px;
 }
 
-// 淡入
+// ═══════════════════════════════════════════
+// 动画系统
+// ═══════════════════════════════════════════
+
+// ● 淡入上滑
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(clamp(8px, 2vh, 20px)); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+// ● 淡入
 @keyframes fadeIn {
   from { opacity: 0; }
   to   { opacity: 1; }
 }
 
-// 淡入缩放
+// ● 淡入缩放
 @keyframes fadeInScale {
-  from {
-    opacity: 0;
-    transform: scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
+  from { opacity: 0; transform: scale(0.96); }
+  to   { opacity: 1; transform: scale(1); }
 }
 
-// 从左滑入
+// ● 从左滑入
 @keyframes slideInLeft {
-  from {
-    opacity: 0;
-    transform: translateX(-24px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
+  from { opacity: 0; transform: translateX(-20px); }
+  to   { opacity: 1; transform: translateX(0); }
 }
 
-// 从右滑入
+// ● 从右滑入
 @keyframes slideInRight {
+  from { opacity: 0; transform: translateX(20px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+// ● 墨迹扩散过渡（用于路由切换）
+@keyframes inkEnter {
   from {
     opacity: 0;
-    transform: translateX(24px);
+    clip-path: inset(0 0 100% 0);
   }
   to {
     opacity: 1;
-    transform: translateX(0);
+    clip-path: inset(0);
   }
 }
 
-// 水墨晕染扩散
-@keyframes inkSpread {
-  from {
-    clip-path: circle(0% at 50% 50%);
-    opacity: 0;
-  }
-  to {
-    clip-path: circle(100% at 50% 50%);
-    opacity: 1;
-  }
-}
-
-// 渐入 + 扩散（用于路由切换）
-@keyframes routeEnter {
+@keyframes inkEnterScale {
   from {
     opacity: 0;
-    transform: translateY(12px) scale(0.98);
-    filter: blur(2px);
+    transform: translateY(8px) scale(0.98);
+    filter: blur(4px);
   }
   to {
     opacity: 1;
@@ -173,95 +200,111 @@ body::after {
   }
 }
 
-// 闪烁（用于加载占位）
+// ● 水波纹
+@keyframes ripple {
+  from {
+    transform: scale(0);
+    opacity: 0.25;
+  }
+  to {
+    transform: scale(3);
+    opacity: 0;
+  }
+}
+
+// ● 闪烁加载
 @keyframes shimmer {
   0%   { background-position: -200% 0; }
   100% { background-position: 200% 0; }
 }
 
 // ── 通用动画类 ──
-.animate-fade-in-up {
-  animation: fadeInUp var(--transition-slow) both;
-}
+.animate-fade-in-up { animation: fadeInUp 0.5s var(--ease-out-expo) both; }
+.animate-fade-in { animation: fadeIn 0.4s ease both; }
+.animate-fade-in-scale { animation: fadeInScale 0.5s var(--ease-out-expo) both; }
+.animate-slide-left { animation: slideInLeft 0.45s var(--ease-out-quart) both; }
+.animate-slide-right { animation: slideInRight 0.45s var(--ease-out-quart) both; }
 
-.animate-fade-in {
-  animation: fadeIn var(--transition-normal) both;
-}
+// ── 入场延缓 ──
+.delay-1  { animation-delay: 0.08s; }
+.delay-2  { animation-delay: 0.16s; }
+.delay-3  { animation-delay: 0.24s; }
+.delay-4  { animation-delay: 0.32s; }
+.delay-5  { animation-delay: 0.40s; }
+.delay-6  { animation-delay: 0.48s; }
+.delay-7  { animation-delay: 0.56s; }
+.delay-8  { animation-delay: 0.64s; }
 
-.animate-fade-in-scale {
-  animation: fadeInScale var(--transition-slow) both;
-}
-
-.animate-slide-in-left {
-  animation: slideInLeft 0.4s ease both;
-}
-
-.animate-slide-in-right {
-  animation: slideInRight 0.4s ease both;
-}
-
-// 入场延缓
-.delay-1  { animation-delay: 0.1s; }
-.delay-2  { animation-delay: 0.2s; }
-.delay-3  { animation-delay: 0.3s; }
-.delay-4  { animation-delay: 0.4s; }
-.delay-5  { animation-delay: 0.5s; }
-.delay-6  { animation-delay: 0.6s; }
-.delay-7  { animation-delay: 0.7s; }
-.delay-8  { animation-delay: 0.8s; }
-
-// ── 装饰性底纹 ──
-// 宣纸纹理（覆盖在 card 上）
-.rice-paper {
-  position: relative;
-
-  &::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    z-index: 0;
-    border-radius: inherit;
-    pointer-events: none;
+// ── 减少动画（无障碍）──
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }
 
-// 印章样式
-.seal-stamp {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 48px;
-  height: 48px;
-  border: 2px solid var(--cinnabar);
-  border-radius: 4px;
-  color: var(--cinnabar);
-  font-family: var(--font-heading);
-  font-size: 12px;
-  writing-mode: vertical-rl;
-  transform: rotate(2deg);
-  opacity: 0.85;
-  user-select: none;
-}
-
-// --- 水墨卡片装饰 ---
-.ink-ornament {
-  position: absolute;
-  pointer-events: none;
-  opacity: 0.03;
-}
-
 // ═══════════════════════════════════════════
-// Element Plus 覆盖
+// Element Plus 覆盖 — 中式统一风格
 // ═══════════════════════════════════════════
 
-// Card
+// ── Button ──
+.el-button {
+  --el-button-bg-color: var(--cinnabar);
+  --el-button-border-color: var(--cinnabar);
+  --el-button-hover-bg-color: var(--cinnabar-hover);
+  --el-button-hover-border-color: var(--cinnabar-hover);
+  --el-button-active-bg-color: var(--cinnabar-active);
+  --el-button-active-border-color: var(--cinnabar-active);
+  border-radius: var(--radius-md);
+  transition: all var(--transition-fast);
+
+  &:not(.el-button--primary):not(.el-button--danger):not(.el-button--warning):not(.el-button--success):not(.el-button--info) {
+    --el-button-bg-color: transparent;
+    --el-button-border-color: var(--border-color);
+    --el-button-text-color: var(--text-regular);
+    --el-button-hover-bg-color: oklch(50% 0.16 28 / 0.06);
+    --el-button-hover-border-color: var(--cinnabar);
+    --el-button-hover-text-color: var(--cinnabar);
+    --el-button-active-bg-color: oklch(50% 0.16 28 / 0.1);
+    --el-button-active-border-color: var(--cinnabar);
+  }
+
+  &.el-button--primary {
+    letter-spacing: 1px;
+  }
+}
+
+// ── Input ──
+.el-input__wrapper {
+  background: oklch(99% 0.002 55) !important;
+  border: 1px solid var(--border-color) !important;
+  box-shadow: none !important;
+  border-radius: var(--radius-md) !important;
+  transition: all var(--transition-fast);
+
+  &:hover {
+    border-color: var(--ink-400) !important;
+  }
+
+  &.is-focus {
+    border-color: var(--cinnabar) !important;
+    box-shadow: 0 0 0 2px oklch(50% 0.16 28 / 0.1) !important;
+  }
+}
+
+[data-theme='dark'] .el-input__wrapper {
+  background: oklch(16% 0.003 55) !important;
+}
+
+// ── Card ──
 .el-card {
-  --el-card-padding: 20px;
-  --el-card-border-radius: var(--radius-lg);
-  --el-card-border-color: var(--border-color);
-  background: var(--bg-card) !important;
-  backdrop-filter: blur(12px);
+  border-radius: var(--radius-lg);
   border: 1px solid var(--border-color);
+  background: var(--bg-card) !important;
   box-shadow: var(--shadow-sm);
   transition: box-shadow var(--transition-normal), transform var(--transition-normal);
 
@@ -270,30 +313,23 @@ body::after {
   }
 }
 
-// Button
-.el-button--primary {
-  --el-button-bg-color: var(--cinnabar) !important;
-  --el-button-border-color: var(--cinnabar) !important;
-  --el-button-hover-bg-color: var(--color-primary-hover) !important;
-  --el-button-hover-border-color: var(--color-primary-hover) !important;
-  --el-button-active-bg-color: var(--color-primary-active) !important;
-  --el-button-active-border-color: var(--color-primary-active) !important;
-}
-
-// Menu
-.el-menu-item.is-active {
-  background: rgba(194, 59, 34, 0.12) !important;
-}
-
-// Tag
+// ── Tag ──
 .el-tag--primary {
-  --el-tag-bg-color: var(--cinnabar-100) !important;
+  --el-tag-bg-color: var(--cinnabar-50) !important;
   --el-tag-border-color: transparent !important;
   --el-tag-text-color: var(--cinnabar) !important;
 }
 
-// Input focus
-.el-input__wrapper.is-focus {
-  border-color: var(--cinnabar) !important;
-  box-shadow: 0 0 0 1px var(--cinnabar) inset !important;
+// ── Menu ──
+.el-menu-item {
+  &.is-active {
+    background: oklch(50% 0.16 28 / 0.12) !important;
+  }
+}
+
+// ── Dialog ──
+.el-dialog {
+  border-radius: var(--radius-xl) !important;
+  background: var(--bg-card) !important;
+  box-shadow: var(--shadow-xl) !important;
 }

@@ -1,75 +1,126 @@
 <template>
-  <div class="search-page">
-    <!-- 页面标题 -->
-    <div class="page-header animate-fade-in-up">
-      <h1 class="page-title">
-        <span class="page-title-deco">◆</span>
-        资源检索
-        <span class="page-title-deco">◆</span>
-      </h1>
-      <p class="page-desc">通过关键词检索传统文化数字化资源</p>
+  <div class="search">
+    <!-- 页面标识 -->
+    <div class="page-lead animate-fade-in-up">
+      <div class="lead-badge">
+        <span class="badge-line" />
+        <span class="badge-text">02 · 检索</span>
+        <span class="badge-line" />
+      </div>
+      <h1 class="lead-title">资源检索</h1>
+      <p class="lead-desc">
+        在传统文化数字馆藏中检索你感兴趣的内容
+      </p>
     </div>
 
-    <!-- 搜索卡片 -->
-    <el-card class="search-card animate-fade-in-up delay-1">
-      <div class="search-area">
-        <div class="search-input-wrapper">
-          <el-input
-            v-model="keyword"
-            placeholder="请输入关键词检索..."
-            clearable
-            size="large"
-            @keyup.enter="handleSearch"
-          >
-            <template #prefix>
-              <el-icon class="search-icon"><Search /></el-icon>
-            </template>
-          </el-input>
-          <el-button type="primary" size="large" class="search-btn" @click="handleSearch">
-            <el-icon><Search /></el-icon>
-            检索
-          </el-button>
-        </div>
+    <!-- 搜索输入区（非对称） -->
+    <div class="search-bar animate-fade-in-up delay-1">
+      <div class="search-field">
+        <span class="search-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
+               stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8" />
+            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+          </svg>
+        </span>
+        <input
+          v-model="keyword"
+          placeholder="输入关键词，检索传统文化资源…"
+          class="search-input"
+          @keyup.enter="handleSearch"
+        />
+        <button
+          class="search-submit"
+          :disabled="!keyword.trim()"
+          @click="handleSearch"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2" stroke-linecap="round"
+               stroke-linejoin="round">
+            <line x1="5" y1="12" x2="19" y2="12" />
+            <polyline points="12 5 19 12 12 19" />
+          </svg>
+          检索
+        </button>
       </div>
-    </el-card>
+    </div>
 
     <!-- 结果区域 -->
     <div v-if="hasSearched" class="result-area animate-fade-in-up delay-2">
       <!-- 无结果 -->
-      <el-card v-if="!loading && results.length === 0" class="empty-card">
-        <div class="empty-state">
-          <span class="empty-icon">🔍</span>
-          <p class="empty-text">暂未匹配到相关资源</p>
-          <p class="empty-hint">请尝试使用其他关键词</p>
+      <div v-if="!searching && items.length === 0" class="result-empty">
+        <div class="empty-visual">
+          <svg width="64" height="64" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="0.8" stroke-linecap="round"
+               stroke-linejoin="round" opacity="0.2">
+            <circle cx="11" cy="11" r="8" />
+            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+            <line x1="8" y1="11" x2="14" y2="11" />
+          </svg>
         </div>
-      </el-card>
+        <p class="empty-title">未匹配到相关资源</p>
+        <p class="empty-hint">试试其他关键词，或使用更宽泛的检索条件</p>
+      </div>
 
       <!-- 结果列表 -->
       <div v-else class="result-list">
         <div
-          v-for="(item, idx) in results"
+          v-for="(item, idx) in items"
           :key="idx"
-          class="result-card-item animate-fade-in-up"
-          :style="{ animationDelay: `${0.1 + idx * 0.08}s` }"
+          class="result-item animate-fade-in-up"
+          :style="{ animationDelay: `${0.1 + idx * 0.07}s` }"
         >
-          <div class="result-content">
-            <div class="result-icon">
-              <el-icon :size="20"><Document /></el-icon>
+          <div class="item-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
+                 stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+              <polyline points="14 2 14 8 20 8" />
+              <line x1="16" y1="13" x2="8" y2="13" />
+              <line x1="16" y1="17" x2="8" y2="17" />
+            </svg>
+          </div>
+
+          <div class="item-body">
+            <div class="item-top">
+              <h3 class="item-title">{{ item.title }}</h3>
+              <span v-if="item.dynasty" class="item-dynasty">{{ item.dynasty }}</span>
             </div>
-            <div class="result-body">
-              <h3 class="result-title">{{ item.title }}</h3>
-              <p class="result-summary">{{ item.summary }}</p>
-              <div class="result-meta">
-                <span class="meta-tag" v-if="item.dynasty">{{ item.dynasty }}</span>
-                <span class="meta-date">{{ item.date }}</span>
-              </div>
+            <p class="item-summary">{{ item.summary }}</p>
+            <div class="item-meta">
+              <span class="meta-date">{{ item.date }}</span>
+              <button class="meta-link" @click="goDetail(item)">
+                查看详情
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                     stroke-linejoin="round">
+                  <line x1="5" y1="12" x2="19" y2="12" />
+                  <polyline points="12 5 19 12 12 19" />
+                </svg>
+              </button>
             </div>
           </div>
-          <el-button type="primary" link class="result-action">
-            查看详情
-            <el-icon><ArrowRight /></el-icon>
-          </el-button>
         </div>
+      </div>
+
+      <!-- 搜索中占位 -->
+      <div v-if="searching" class="result-searching">
+        <div class="searching-dot" />
+        <span>正在检索…</span>
+      </div>
+    </div>
+
+    <!-- 初次进入引导 -->
+    <div v-else class="search-guide animate-fade-in delay-3">
+      <div class="guide-lines">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="0.8" opacity="0.15">
+          <circle cx="11" cy="11" r="8" />
+          <line x1="21" y1="21" x2="16.65" y2="16.65" />
+        </svg>
+        <p>输入关键词开始探索</p>
+        <p class="guide-suggest">试试：唐诗 · 宋词 · 山水 · 书法 · 古籍</p>
       </div>
     </div>
   </div>
@@ -77,280 +128,393 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
+import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { Search, Document, ArrowRight } from '@element-plus/icons-vue'
+
+const router = useRouter()
 
 const keyword = ref('')
-const loading = ref(false)
+const searching = ref(false)
 const hasSearched = ref(false)
 
-interface MockResult {
+interface ResultItem {
+  id: string
   title: string
   summary: string
   dynasty: string
   date: string
 }
 
-const results = ref<MockResult[]>([])
+const items = ref<ResultItem[]>([])
 
 const handleSearch = () => {
-  if (!keyword.value.trim()) {
+  const q = keyword.value.trim()
+  if (!q) {
     ElMessage.warning('请输入检索关键词')
     return
   }
 
-  loading.value = true
+  searching.value = true
   hasSearched.value = true
 
-  // 模拟数据
   setTimeout(() => {
-    results.value = [
+    searching.value = false
+    // 模拟结果
+    items.value = [
       {
-        title: `搜索结果：「${keyword.value}」相关示例一`,
-        summary: '这是传统文化资源中的相关内容摘要，展示了数字化保存的成果与价值...',
+        id: 'res-1',
+        title: `「${q}」相关 · 示例一`,
+        summary: '在传统文化数字馆藏中发现的相关内容摘要，展示了数字化保存的成果…',
         dynasty: '唐代',
-        date: '2026-06-01'
+        date: '2026-06'
       },
       {
-        title: `搜索结果：「${keyword.value}」相关示例二`,
-        summary: '智能识别与分析技术在本平台中的应用，为传统文化的保护与传承提供了新的可能...',
+        id: 'res-2',
+        title: `「${q}」相关 · 示例二`,
+        summary: '智能识别技术在本平台中的应用，为传统文化的保护与传承提供了新可能…',
         dynasty: '宋代',
-        date: '2026-05-28'
+        date: '2026-05'
       },
       {
-        title: `搜索结果：「${keyword.value}」相关示例三`,
-        summary: '通过数字化手段，让更多人了解与接触传统文化的精髓与魅力...',
+        id: 'res-3',
+        title: `「${q}」相关 · 示例三`,
+        summary: '通过数字化手段，让更多人了解与接触传统文化的精髓与魅力…',
         dynasty: '明代',
-        date: '2026-05-20'
+        date: '2026-04'
       }
     ]
-    loading.value = false
-    ElMessage.success(`检索完成，共找到 ${results.value.length} 条结果`)
+    ElMessage.success(`找到 ${items.value.length} 条结果`)
   }, 600)
+}
+
+const goDetail = (item: ResultItem) => {
+  router.push(`/recognition/${item.id}`)
 }
 </script>
 
 <style scoped lang="scss">
-.search-page {
-  // ── 页面标题 ──
-  .page-header {
-    margin-bottom: 24px;
+// ═══════════════════════════════════════════
+// 当代山水 · 资源检索
+// ═══════════════════════════════════════════
 
-    .page-title {
-      font-family: var(--font-heading);
-      font-size: 22px;
-      font-weight: 700;
-      color: var(--text-primary);
+.search {
+  // ── 页面引导 ──
+  .page-lead {
+    margin-bottom: var(--space-lg);
+
+    .lead-badge {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 8px;
+      margin-bottom: 8px;
 
-      .page-title-deco {
-        font-size: 8px;
-        color: var(--cinnabar);
-        opacity: 0.4;
-      }
-    }
-
-    .page-desc {
-      margin-top: 6px;
-      font-size: 13px;
-      color: var(--text-secondary);
-    }
-  }
-
-  // ── 搜索卡片 ──
-  .search-card {
-    margin-bottom: 24px;
-
-    .search-area {
-      .search-input-wrapper {
-        display: flex;
-        gap: 12px;
-
-        :deep(.el-input__wrapper) {
-          background: rgba(245, 240, 232, 0.4);
-          border: 1px solid var(--border-color);
-          box-shadow: none !important;
-          border-radius: var(--radius-md);
-          transition: all var(--transition-normal);
-
-          &:hover {
-            border-color: var(--ink-300);
-          }
-
-          &.is-focus {
-            border-color: var(--cinnabar);
-
-            .search-icon {
-              color: var(--cinnabar);
-            }
-          }
-        }
-
-        .search-icon {
-          color: var(--ink-300);
-          transition: color var(--transition-fast);
-        }
-
-        .search-btn {
-          min-width: 100px;
-          letter-spacing: 2px;
-          border-radius: var(--radius-md);
-
-          .el-icon {
-            margin-right: 4px;
-          }
-        }
-      }
-    }
-  }
-
-  // ── 结果区域 ──
-  .result-area {
-    .empty-card {
-      :deep(.el-card__body) {
-        padding: 60px 24px;
-      }
-    }
-
-    .empty-state {
-      text-align: center;
-
-      .empty-icon {
-        font-size: 48px;
+      .badge-line {
+        width: 20px;
+        height: 1px;
+        background: var(--cinnabar);
         opacity: 0.3;
       }
 
-      .empty-text {
-        margin-top: 16px;
-        font-size: 15px;
-        color: var(--text-secondary);
+      .badge-text {
+        font-size: 11px;
+        color: var(--cinnabar);
+        letter-spacing: 3px;
+        text-transform: uppercase;
+        opacity: 0.7;
+      }
+    }
+
+    .lead-title {
+      font-family: var(--font-heading);
+      font-size: clamp(22px, 3vw, 28px);
+      font-weight: 700;
+      color: var(--text-primary);
+      letter-spacing: 4px;
+    }
+
+    .lead-desc {
+      margin-top: 6px;
+      font-size: 13px;
+      color: var(--text-secondary);
+      max-width: 480px;
+      line-height: 1.6;
+    }
+  }
+
+  // ── 搜索条 ──
+  .search-bar {
+    margin-bottom: var(--space-xl);
+  }
+
+  .search-field {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-xl);
+    overflow: hidden;
+    transition: all var(--transition-fast);
+    box-shadow: var(--shadow-sm);
+
+    &:focus-within {
+      border-color: var(--cinnabar);
+      box-shadow: 0 0 0 3px oklch(50% 0.16 28 / 0.08);
+    }
+
+    .search-icon {
+      display: flex;
+      padding: 0 12px 0 18px;
+      color: var(--text-tertiary);
+      transition: color var(--transition-fast);
+    }
+
+    &:focus-within .search-icon {
+      color: var(--cinnabar);
+    }
+
+    .search-input {
+      all: unset;
+      flex: 1;
+      height: 52px;
+      font-size: 15px;
+      color: var(--text-primary);
+      font-family: var(--font-body);
+
+      &::placeholder {
+        color: var(--text-placeholder);
+        font-weight: 400;
+      }
+    }
+
+    .search-submit {
+      all: unset;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      height: 38px;
+      padding: 0 20px;
+      margin-right: 7px;
+      font-size: 13px;
+      letter-spacing: 1px;
+      color: #fff;
+      background: linear-gradient(135deg, var(--cinnabar), oklch(42% 0.14 28));
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      transition: all var(--transition-fast);
+      flex-shrink: 0;
+
+      svg {
+        flex-shrink: 0;
+      }
+
+      &:hover:not(:disabled) {
+        transform: translateY(-1px);
+        box-shadow: 0 2px 8px oklch(50% 0.16 28 / 0.25);
+      }
+
+      &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+    }
+  }
+
+  // ── 结果区 ──
+  .result-area {
+    .result-empty {
+      text-align: center;
+      padding: var(--space-3xl) 0;
+
+      .empty-visual {
+        margin-bottom: 16px;
+        color: var(--text-primary);
+      }
+
+      .empty-title {
+        font-size: 16px;
+        color: var(--text-regular);
+        margin-bottom: 6px;
       }
 
       .empty-hint {
-        margin-top: 8px;
         font-size: 13px;
-        color: var(--ink-300);
+        color: var(--text-tertiary);
       }
     }
 
     .result-list {
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 2px;
+    }
 
-      .result-card-item {
+    .result-item {
+      display: flex;
+      gap: 16px;
+      padding: var(--space-lg) var(--space-xl);
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      transition: all var(--transition-fast);
+      cursor: pointer;
+
+      &:hover {
+        border-color: oklch(50% 0.16 28 / 0.15);
+        box-shadow: var(--shadow-md);
+        transform: translateY(-1px);
+
+        .meta-link {
+          opacity: 1;
+          transform: translateX(0);
+        }
+      }
+
+      + .result-item {
+        margin-top: 8px;
+      }
+
+      .item-icon {
+        flex-shrink: 0;
+        width: 40px;
+        height: 40px;
         display: flex;
-        justify-content: space-between;
         align-items: center;
-        padding: 20px 24px;
-        background: var(--bg-card);
-        backdrop-filter: blur(8px);
-        border: 1px solid var(--border-color);
-        border-radius: var(--radius-lg);
-        transition: all var(--transition-normal);
-        cursor: pointer;
+        justify-content: center;
+        background: oklch(50% 0.16 28 / 0.06);
+        border-radius: var(--radius-md);
+        color: var(--cinnabar);
+      }
 
-        &:hover {
-          border-color: rgba(194, 59, 34, 0.15);
-          box-shadow: var(--shadow-md);
-          transform: translateY(-2px);
+      .item-body {
+        flex: 1;
+        min-width: 0;
 
-          .result-action {
-            opacity: 1;
-            transform: translateX(0);
-          }
-        }
-
-        .result-content {
+        .item-top {
           display: flex;
-          gap: 16px;
-          flex: 1;
-          min-width: 0;
+          align-items: center;
+          gap: 10px;
+          margin-bottom: 6px;
 
-          .result-icon {
+          .item-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text-primary);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+          }
+
+          .item-dynasty {
             flex-shrink: 0;
-            width: 40px;
-            height: 40px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: rgba(194, 59, 34, 0.08);
-            border-radius: var(--radius-md);
+            font-size: 10px;
+            padding: 1px 10px;
+            border-radius: var(--radius-full);
+            background: oklch(50% 0.16 28 / 0.06);
             color: var(--cinnabar);
-          }
-
-          .result-body {
-            min-width: 0;
-
-            .result-title {
-              font-size: 15px;
-              font-weight: 600;
-              color: var(--text-primary);
-              margin-bottom: 6px;
-              overflow: hidden;
-              text-overflow: ellipsis;
-              white-space: nowrap;
-            }
-
-            .result-summary {
-              font-size: 13px;
-              color: var(--text-secondary);
-              line-height: 1.5;
-              display: -webkit-box;
-              -webkit-line-clamp: 2;
-              -webkit-box-orient: vertical;
-              overflow: hidden;
-              margin-bottom: 8px;
-            }
-
-            .result-meta {
-              display: flex;
-              gap: 12px;
-
-              .meta-tag {
-                font-size: 11px;
-                padding: 2px 10px;
-                border-radius: 10px;
-                background: rgba(194, 59, 34, 0.08);
-                color: var(--cinnabar);
-              }
-
-              .meta-date {
-                font-size: 12px;
-                color: var(--ink-300);
-              }
-            }
+            letter-spacing: 1px;
           }
         }
 
-        .result-action {
-          flex-shrink: 0;
-          opacity: 0;
-          transform: translateX(-8px);
-          transition: all var(--transition-normal);
+        .item-summary {
           font-size: 13px;
-          margin-left: 16px;
+          color: var(--text-secondary);
+          line-height: 1.6;
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+          margin-bottom: 8px;
+        }
 
-          .el-icon {
-            margin-left: 4px;
+        .item-meta {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+
+          .meta-date {
+            font-size: 12px;
+            color: var(--text-tertiary);
+          }
+
+          .meta-link {
+            all: unset;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 12px;
+            color: var(--cinnabar);
+            cursor: pointer;
+            opacity: 0;
+            transform: translateX(-6px);
+            transition: all var(--transition-fast);
+
+            &:hover {
+              opacity: 1 !important;
+            }
           }
         }
+      }
+    }
+
+    // ── 搜索中的占位 ──
+    .result-searching {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      padding: var(--space-2xl) 0;
+      font-size: 14px;
+      color: var(--text-secondary);
+
+      .searching-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--cinnabar);
+        animation: pulse 1s ease-in-out infinite;
+      }
+
+      @keyframes pulse {
+        0%, 100% { opacity: 0.3; transform: scale(0.8); }
+        50% { opacity: 1; transform: scale(1.2); }
+      }
+    }
+  }
+
+  // ── 初次引导 ──
+  .search-guide {
+    text-align: center;
+    padding: var(--space-4xl) 0;
+
+    .guide-lines {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      color: var(--text-tertiary);
+
+      p {
+        font-size: 14px;
+      }
+
+      .guide-suggest {
+        font-size: 12px;
+        opacity: 0.7;
+        letter-spacing: 1px;
       }
     }
   }
 }
 
-// ── 动画 ──
+// ── 动画覆盖 ──
 @keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(12px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 </style>

@@ -1,66 +1,180 @@
 <template>
-  <div class="sidebar">
-    <!-- Logo 区域（中式印章风格） -->
-    <div class="logo-wrapper" :class="{ collapsed }">
-      <div class="logo-seal">
-        <span class="seal-char">文</span>
-        <span class="seal-char">化</span>
+  <nav class="sidebar">
+    <!-- 品牌区：印章风格 -->
+    <div class="brand" :class="{ collapsed }">
+      <div class="brand-seal">
+        <span class="seal-char seal-top">文</span>
+        <span class="seal-char seal-btm">化</span>
       </div>
-      <transition name="logo-text">
-        <div v-if="!collapsed" class="logo-text-group">
-          <span class="logo-title">传统文化</span>
-          <span class="logo-subtitle">数字平台</span>
+      <transition name="brand-fade">
+        <div v-if="!collapsed" class="brand-text">
+          <span class="brand-title">传统文化</span>
+          <span class="brand-subtitle">数字化平台</span>
         </div>
       </transition>
     </div>
 
-    <!-- 装饰分隔线 -->
-    <div class="sidebar-divider" :class="{ collapsed }">
+    <!-- 分隔装饰 -->
+    <div class="divider" :class="{ collapsed }">
       <span class="divider-line" />
       <span v-if="!collapsed" class="divider-dot">✦</span>
       <span class="divider-line" />
     </div>
 
     <!-- 导航菜单 -->
-    <el-menu
-      :default-active="activeMenu"
-      :collapse="collapsed"
-      :collapse-transition="false"
-      background-color="transparent"
-      text-color="rgba(245, 240, 232, 0.65)"
-      active-text-color="#f5f0e8"
-      router
-    >
-      <el-menu-item index="/upload">
-        <el-icon><Upload /></el-icon>
-        <span>资源上传</span>
-      </el-menu-item>
+    <ul class="nav-list">
+      <li>
+        <router-link
+          to="/home"
+          class="nav-item"
+          :class="{ active: isActive('/home') }"
+          :title="collapsed ? '工作台' : undefined"
+        >
+          <span class="nav-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+              <polyline points="9 22 9 12 15 12 15 22" />
+            </svg>
+          </span>
+          <transition name="nav-text">
+            <span v-if="!collapsed" class="nav-label">工作台</span>
+          </transition>
+          <span v-if="!collapsed" class="nav-indicator" />
+        </router-link>
+      </li>
 
-      <el-menu-item index="/search">
-        <el-icon><Search /></el-icon>
-        <span>资源检索</span>
-      </el-menu-item>
-    </el-menu>
+      <li>
+        <router-link
+          to="/upload"
+          class="nav-item"
+          :class="{ active: isActive('/upload') }"
+          :title="collapsed ? '资源上传' : undefined"
+        >
+          <span class="nav-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="17 8 12 3 7 8" />
+              <line x1="12" y1="3" x2="12" y2="15" />
+            </svg>
+          </span>
+          <transition name="nav-text">
+            <span v-if="!collapsed" class="nav-label">资源上传</span>
+          </transition>
+          <span v-if="!collapsed" class="nav-indicator" />
+        </router-link>
+      </li>
 
-    <!-- 底部装饰 -->
-    <div v-if="!collapsed" class="sidebar-footer">
-      <div class="footer-ornament" />
-      <span class="footer-text">传承经典 · 智享文化</span>
+      <li>
+        <router-link
+          to="/explore"
+          class="nav-item"
+          :class="{ active: isActive('/explore') }"
+          :title="collapsed ? '知识发现' : undefined"
+        >
+          <span class="nav-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10" />
+              <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" />
+            </svg>
+          </span>
+          <transition name="nav-text">
+            <span v-if="!collapsed" class="nav-label">知识发现</span>
+          </transition>
+          <span v-if="!collapsed" class="nav-indicator" />
+        </router-link>
+      </li>
+
+      <li>
+        <router-link
+          to="/search"
+          class="nav-item"
+          :class="{ active: isActive('/search') }"
+          :title="collapsed ? '资源检索' : undefined"
+        >
+          <span class="nav-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8" />
+              <line x1="21" y1="21" x2="16.65" y2="16.65" />
+            </svg>
+          </span>
+          <transition name="nav-text">
+            <span v-if="!collapsed" class="nav-label">资源检索</span>
+          </transition>
+          <span v-if="!collapsed" class="nav-indicator" />
+        </router-link>
+      </li>
+
+      <li>
+        <router-link
+          to="/history"
+          class="nav-item"
+          :class="{ active: isActive('/history') }"
+          :title="collapsed ? '识别历史' : undefined"
+        >
+          <span class="nav-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10" />
+              <polyline points="12 6 12 12 16 14" />
+            </svg>
+          </span>
+          <transition name="nav-text">
+            <span v-if="!collapsed" class="nav-label">识别历史</span>
+          </transition>
+          <span v-if="!collapsed" class="nav-indicator" />
+        </router-link>
+      </li>
+
+      <li>
+        <router-link
+          to="/profile"
+          class="nav-item"
+          :class="{ active: isActive('/profile') }"
+          :title="collapsed ? '个人中心' : undefined"
+        >
+          <span class="nav-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+              <circle cx="12" cy="7" r="4" />
+            </svg>
+          </span>
+          <transition name="nav-text">
+            <span v-if="!collapsed" class="nav-label">个人中心</span>
+          </transition>
+          <span v-if="!collapsed" class="nav-indicator" />
+        </router-link>
+      </li>
+    </ul>
+
+    <!-- 底部山水剪影装饰 -->
+    <div v-if="!collapsed" class="sidebar-mountains">
+      <svg viewBox="0 0 240 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M0 80V60 Q30 42 55 52 Q80 62 105 45 Q130 28 155 42 Q180 56 200 38 Q220 20 240 30V80Z"
+              fill="currentColor" opacity="0.08" />
+        <path d="M0 80V65 Q40 48 65 55 Q90 62 110 48 Q130 34 155 50 Q180 66 200 48 Q220 30 240 42V80Z"
+              fill="currentColor" opacity="0.05" />
+      </svg>
     </div>
-  </div>
+
+    <!-- 底部标语 -->
+    <div v-if="!collapsed" class="sidebar-footer">
+      <span>传承经典 · 智享文化</span>
+    </div>
+  </nav>
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
-import { Upload, Search } from '@element-plus/icons-vue'
 
-defineProps<{
+const props = defineProps<{
   collapsed: boolean
 }>()
 
 const route = useRoute()
-const activeMenu = computed(() => route.path)
+
+const isActive = (path: string) => {
+  return route.path.startsWith(path)
+}
 </script>
 
 <style scoped lang="scss">
@@ -68,89 +182,85 @@ const activeMenu = computed(() => route.path)
   height: 100%;
   display: flex;
   flex-direction: column;
+  background: linear-gradient(180deg, oklch(14% 0.025 30) 0%, #0f0b07 100%);
   position: relative;
   overflow: hidden;
+  user-select: none;
 
-  // 底部装饰性山水剪影
-  &::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: 80px;
-    z-index: 0;
-    pointer-events: none;
-    opacity: 0.08;
-    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 60'%3E%3Cpath d='M0 60 L0 40 Q20 25 40 35 Q60 45 80 30 Q100 15 120 28 Q140 40 160 22 Q180 10 200 20 L200 60 Z' fill='%23f5f0e8'/%3E%3Cpath d='M0 60 L0 48 Q30 32 50 40 Q70 48 90 36 Q110 24 130 38 Q150 50 170 32 Q185 20 200 28 L200 60 Z' fill='%23f5f0e8' opacity='0.6'/%3E%3C/svg%3E") no-repeat bottom / contain;
-  }
-
-  // ── Logo 区域（印章风格）──
-  .logo-wrapper {
+  // ── 品牌区 ──
+  .brand {
     display: flex;
     align-items: center;
-    padding: 24px 16px 16px;
     gap: 12px;
+    padding: 20px 16px 16px;
     position: relative;
     z-index: 1;
 
     &.collapsed {
       justify-content: center;
-      padding: 20px 0;
+      padding: 20px 0 16px;
     }
 
-    .logo-seal {
+    .brand-seal {
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      width: 44px;
-      height: 44px;
+      width: 42px;
+      height: 42px;
       border: 2px solid var(--cinnabar);
       border-radius: 4px;
-      transform: rotate(-2deg);
+      transform: rotate(-3deg);
       flex-shrink: 0;
-      transition: all var(--transition-normal);
+      transition: transform var(--transition-spring);
+
+      &:hover {
+        transform: rotate(0deg) scale(1.05);
+      }
 
       .seal-char {
         font-family: var(--font-heading);
-        font-size: 14px;
-        line-height: 1;
+        font-size: 13px;
+        line-height: 1.1;
         color: var(--cinnabar);
         font-weight: 700;
         letter-spacing: 1px;
       }
+
+      .seal-btm {
+        margin-top: 1px;
+      }
     }
 
-    .logo-text-group {
+    .brand-text {
       display: flex;
       flex-direction: column;
-      gap: 2px;
+      gap: 1px;
 
-      .logo-title {
+      .brand-title {
         font-family: var(--font-heading);
-        font-size: 17px;
+        font-size: 16px;
         font-weight: 700;
         color: var(--text-inverse);
-        letter-spacing: 3px;
-        line-height: 1.2;
+        letter-spacing: 4px;
+        line-height: 1.3;
       }
 
-      .logo-subtitle {
-        font-size: 11px;
-        color: rgba(245, 240, 232, 0.5);
-        letter-spacing: 4px;
+      .brand-subtitle {
+        font-size: 10px;
+        color: oklch(75% 0.01 55 / 0.45);
+        letter-spacing: 5px;
       }
     }
   }
 
-  // ── 分隔装饰 ──
-  .sidebar-divider {
+  // ── 分隔线 ──
+  .divider {
     display: flex;
     align-items: center;
     gap: 8px;
     padding: 0 20px;
-    margin-bottom: 8px;
+    margin-bottom: 6px;
     position: relative;
     z-index: 1;
 
@@ -165,50 +275,85 @@ const activeMenu = computed(() => route.path)
       background: linear-gradient(
         90deg,
         transparent,
-        rgba(245, 240, 232, 0.15),
+        oklch(85% 0.01 55 / 0.1),
         transparent
       );
     }
 
     .divider-dot {
-      font-size: 8px;
+      font-size: 7px;
       color: var(--gold);
-      opacity: 0.5;
+      opacity: 0.4;
     }
   }
 
-  // ── 菜单 ──
-  :deep(.el-menu) {
-    border-right: none;
+  // ── 导航列表 ──
+  .nav-list {
+    list-style: none;
+    padding: 0 12px;
     flex: 1;
-    background-color: transparent;
     position: relative;
     z-index: 1;
 
-    .el-menu-item {
-      height: 46px;
-      line-height: 46px;
-      margin: 4px 12px;
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 0 12px;
+      height: 44px;
+      margin-bottom: 2px;
       border-radius: var(--radius-md);
-      transition: all var(--transition-normal);
+      color: oklch(78% 0.01 55 / 0.6);
+      text-decoration: none;
       position: relative;
+      transition: all var(--transition-fast);
+      cursor: pointer;
+      overflow: hidden;
 
-      .el-icon {
-        font-size: 18px;
+      .nav-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        width: 20px;
+        height: 20px;
         transition: transform var(--transition-spring);
       }
 
-      &:hover {
-        background: rgba(245, 240, 232, 0.08);
+      .nav-label {
+        font-size: 13.5px;
+        font-weight: 450;
+        letter-spacing: 1px;
+        white-space: nowrap;
+      }
 
-        .el-icon {
-          transform: scale(1.1);
+      .nav-indicator {
+        position: absolute;
+        right: 8px;
+        width: 5px;
+        height: 5px;
+        border-radius: 50%;
+        background: var(--cinnabar);
+        opacity: 0;
+        transition: opacity var(--transition-fast);
+      }
+
+      &:hover {
+        color: var(--text-inverse);
+        background: oklch(85% 0.01 55 / 0.06);
+
+        .nav-icon {
+          transform: scale(1.08);
         }
       }
 
-      &.is-active {
-        background: linear-gradient(135deg, rgba(194, 59, 34, 0.2), rgba(194, 59, 34, 0.1));
-        color: #f5f0e8 !important;
+      &.active {
+        color: var(--text-inverse);
+        background: linear-gradient(
+          135deg,
+          oklch(45% 0.15 28 / 0.25),
+          oklch(45% 0.15 28 / 0.1)
+        );
 
         &::before {
           content: '';
@@ -217,54 +362,76 @@ const activeMenu = computed(() => route.path)
           top: 50%;
           transform: translateY(-50%);
           width: 3px;
-          height: 20px;
+          height: 18px;
           background: var(--cinnabar);
           border-radius: 0 2px 2px 0;
         }
 
-        .el-icon {
+        .nav-icon {
           color: var(--cinnabar);
+        }
+
+        .nav-indicator {
+          opacity: 1;
         }
       }
     }
   }
 
-  // ── 底部 ──
+  // ── 底部山水 ──
+  .sidebar-mountains {
+    position: absolute;
+    bottom: 32px;
+    left: 0;
+    right: 0;
+    z-index: 0;
+    color: var(--text-inverse);
+    pointer-events: none;
+
+    svg {
+      width: 100%;
+      height: auto;
+    }
+  }
+
+  // ── 底部标语 ──
   .sidebar-footer {
-    padding: 16px 20px;
+    padding: 12px 16px 14px;
     text-align: center;
     position: relative;
     z-index: 1;
+    border-top: 1px solid oklch(85% 0.01 55 / 0.06);
 
-    .footer-ornament {
-      height: 1px;
-      margin-bottom: 12px;
-      background: linear-gradient(
-        90deg,
-        transparent,
-        rgba(245, 240, 232, 0.1),
-        transparent
-      );
-    }
-
-    .footer-text {
-      font-size: 11px;
-      color: rgba(245, 240, 232, 0.3);
-      letter-spacing: 3px;
+    span {
+      font-size: 10px;
+      color: oklch(70% 0.008 55 / 0.3);
+      letter-spacing: 4px;
     }
   }
 }
 
-// Logo 文字过渡
-.logo-text-enter-active,
-.logo-text-leave-active {
-  transition: all 0.25s ease;
+// ── 文字过渡 ──
+.brand-fade-enter-active,
+.brand-fade-leave-active {
+  transition: all 0.2s var(--ease-out-quart);
   overflow: hidden;
 }
 
-.logo-text-enter-from,
-.logo-text-leave-to {
+.brand-fade-enter-from,
+.brand-fade-leave-to {
   opacity: 0;
   transform: translateX(-8px);
+}
+
+.nav-text-enter-active,
+.nav-text-leave-active {
+  transition: all 0.15s ease;
+  overflow: hidden;
+}
+
+.nav-text-enter-from,
+.nav-text-leave-to {
+  opacity: 0;
+  transform: translateX(-6px);
 }
 </style>

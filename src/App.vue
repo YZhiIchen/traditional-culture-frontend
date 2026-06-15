@@ -1,10 +1,6 @@
 <template>
   <router-view v-slot="{ Component, route: r }">
-    <transition
-      :name="transitionName"
-      mode="out-in"
-      appear
-    >
+    <transition :name="transitionName" mode="out-in" appear>
       <component :is="Component" :key="r.path" />
     </transition>
   </router-view>
@@ -18,12 +14,11 @@ import { storeToRefs } from 'pinia'
 
 const route = useRoute()
 const appStore = useAppStore()
-const { theme } = storeToRefs(appStore)
+const { theme, sidebarCollapsed } = storeToRefs(appStore)
 
 // 路由过渡类型
-const transitionName = ref<'fade-slide' | 'fade'>('fade')
+const transitionName = ref<'ink' | 'fade'>('fade')
 
-// 根据路由深度或方向切换过渡
 watch(
   () => route.path,
   (to, from) => {
@@ -31,36 +26,58 @@ watch(
       transitionName.value = 'fade'
       return
     }
-    // 登录页进主页用 fade-slide，其他用 fade
+
     if (from === '/login' || to === '/login') {
       transitionName.value = 'fade'
     } else {
-      transitionName.value = 'fade-slide'
+      transitionName.value = 'ink'
     }
   }
 )
 
-// 监听主题变化
-if (theme.value === 'dark') {
-  document.documentElement.setAttribute('data-theme', 'dark')
-}
+// 监听主题
+watch(theme, (val) => {
+  document.documentElement.setAttribute('data-theme', val === 'dark' ? 'dark' : 'light')
+})
+
+// 侧栏折叠时，在 html 上记录 class（用于 some ep 等全局覆盖）
+watch(sidebarCollapsed, (val) => {
+  document.documentElement.classList.toggle('sidebar-collapsed', val)
+})
+
+// 初始化
+document.documentElement.setAttribute('data-theme', theme.value)
+document.documentElement.classList.toggle('sidebar-collapsed', sidebarCollapsed.value)
 </script>
 
 <style lang="scss">
 // ── 路由过渡动画 ──
 
-// Fade + Slide
-.fade-slide-enter-active {
-  animation: routeEnter 0.4s ease both;
+// 墨迹过渡
+.ink-enter-active {
+  animation: routeEnter 0.4s var(--ease-out-expo) both;
 }
 
-.fade-slide-leave-active {
-  animation: routeEnter 0.25s ease reverse both;
+.ink-leave-active {
+  animation: routeEnter 0.28s ease reverse both;
 }
 
-// Simple fade
+@keyframes routeEnter {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.985);
+    filter: blur(3px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+// 简单淡入/淡出
 .fade-enter-active {
-  transition: opacity 0.3s ease;
+  transition: opacity 0.35s ease;
 }
 
 .fade-leave-active {
