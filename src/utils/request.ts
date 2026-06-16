@@ -48,27 +48,44 @@ class Request {
           return Promise.reject(new Error(message))
         } else {
           ElMessage.error(message || '请求失败')
-          return Promise.reject(new Error(message))
+          return Promise.reject(new Error(message || '请求失败'))
         }
       },
       (error) => {
-        if (error.response?.status === 401) {
+        const status = error.response?.status
+        const respData = error.response?.data
+
+        // 提取真实错误信息
+        let errMsg = ''
+        if (respData) {
+          if (typeof respData === 'string') {
+            errMsg = respData
+          } else if (respData.message) {
+            errMsg = respData.message  // 后端统一 {code, message, data} 格式
+          } else if (respData.detail) {
+            // Pydantic 验证错误: {"detail": [{"msg": "..."}, ...]}
+            const details = Array.isArray(respData.detail) ? respData.detail : [respData.detail]
+            errMsg = details.map((d: any) => d.msg || d).join('；')
+          }
+        }
+        if (!errMsg) errMsg = error.message || '请求失败'
+
+        if (status === 401) {
           if (!this.isRedirecting) {
             this.isRedirecting = true
             localStorage.removeItem('token')
+            ElMessage.error('登录已过期，请重新登录')
             router.push('/login')
-            setTimeout(() => {
-              this.isRedirecting = false
-            }, 3000)
+            setTimeout(() => { this.isRedirecting = false }, 3000)
           }
         } else if (error.code === 'ECONNABORTED') {
           ElMessage.error('请求超时，请稍后重试')
         } else if (error.message?.includes('Network Error')) {
           ElMessage.error('网络连接失败')
         } else {
-          ElMessage.error(error.message || '请求失败')
+          ElMessage.error(errMsg)
         }
-        return Promise.reject(error)
+        return Promise.reject(new Error(errMsg))
       }
     )
   }

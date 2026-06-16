@@ -51,10 +51,22 @@ const routes: RouteRecordRaw[] = [
         meta: { title: '识别历史' }
       },
       {
+        path: '/admin',
+        name: 'Admin',
+        component: () => import('@/views/Admin/index.vue'),
+        meta: { title: '用户管理' }
+      },
+      {
         path: '/explore',
         name: 'Explore',
         component: () => import('@/views/Explore/index.vue'),
         meta: { title: '知识发现' }
+      },
+      {
+        path: '/favorites',
+        name: 'Favorites',
+        component: () => import('@/views/Favorites/index.vue'),
+        meta: { title: '我的收藏' }
       },
       {
         path: '/profile',

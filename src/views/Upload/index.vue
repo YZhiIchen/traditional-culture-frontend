@@ -4,7 +4,7 @@
     <div class="page-lead animate-fade-in-up">
       <div class="lead-badge">
         <span class="badge-line" />
-        <span class="badge-text">01 · 上传</span>
+        <span class="badge-text">资源 · 上传</span>
         <span class="badge-line" />
       </div>
       <h1 class="lead-title">资源上架</h1>
@@ -256,6 +256,8 @@
 import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
+import { uploadFileApi, uploadTextApi } from '@/api/upload'
+import { getRecognitionResultApi } from '@/api/recognition'
 
 const router = useRouter()
 
@@ -323,37 +325,44 @@ const clearImage = () => {
   currentFile.value = null
 }
 
-const recognizeImage = () => {
+const recognizeImage = async () => {
   if (!currentFile.value) return
   imageLoading.value = true
-  setTimeout(() => {
+  try {
+    const res = await uploadFileApi(currentFile.value)
     resultFileName.value = currentFile.value?.name || ''
-    showResult()
+    resultId.value = res.id as string
+    resultTime.value = res.recognitionTime || new Date().toLocaleString('zh-CN')
+    resultVisible.value = true
     clearImage()
+    ElMessage.success('识别完成')
+  } catch (e: any) {
+    ElMessage.error(e.message || '上传失败')
+  } finally {
     imageLoading.value = false
-  }, 1200)
+  }
 }
 
-const submitText = () => {
+const submitText = async () => {
   if (!textForm.title.trim() || !textForm.content.trim()) {
     ElMessage.warning('请填写标题和内容')
     return
   }
 
   textLoading.value = true
-  setTimeout(() => {
+  try {
+    const res = await uploadTextApi(textForm.content, textForm.title)
     resultFileName.value = textForm.title
-    showResult()
+    resultId.value = res.id as string
+    resultTime.value = res.recognitionTime || new Date().toLocaleString('zh-CN')
+    resultVisible.value = true
     resetText()
+    ElMessage.success('识别完成')
+  } catch (e: any) {
+    ElMessage.error(e.message || '提交失败')
+  } finally {
     textLoading.value = false
-  }, 1200)
-}
-
-const showResult = () => {
-  resultId.value = 'rec-' + Date.now().toString(36)
-  resultTime.value = new Date().toLocaleString('zh-CN')
-  resultVisible.value = true
-  ElMessage.success('识别完成')
+  }
 }
 
 const resetText = () => {

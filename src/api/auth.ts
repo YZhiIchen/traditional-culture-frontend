@@ -7,6 +7,11 @@ export const loginApi = (data: LoginForm) => {
   return request.post<{ token: string; userInfo: UserInfo }>('/auth/login', data)
 }
 
+// 注册接口
+export const registerApi = (data: { username: string; password: string; nickname: string }) => {
+  return request.post('/auth/register', data)
+}
+
 // 登出接口
 export const logoutApi = () => {
   return request.post('/auth/logout')

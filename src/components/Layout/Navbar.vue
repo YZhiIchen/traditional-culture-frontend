@@ -52,8 +52,9 @@
       <!-- 用户 -->
       <el-dropdown @command="handleCommand" trigger="click">
         <div class="user-chip" tabindex="0" role="button" aria-label="用户菜单">
-          <span class="user-avatar">Y</span>
-          <span class="user-name">YangZhi</span>
+          <img v-if="userStore.userInfo?.avatar" :src="userStore.userInfo.avatar" class="user-avatar-img" />
+          <span v-else class="user-avatar">{{ userAvatar }}</span>
+          <span class="user-name">{{ userName }}</span>
           <svg class="user-chevron" width="10" height="10" viewBox="0 0 24 24"
                fill="none" stroke="currentColor" stroke-width="2.5"
                stroke-linecap="round" stroke-linejoin="round">
@@ -101,6 +102,7 @@ import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { useAppStore } from '@/stores/app'
+import { useUserStore } from '@/stores/user'
 import { storeToRefs } from 'pinia'
 
 defineProps<{
@@ -114,6 +116,7 @@ defineEmits<{
 const route = useRoute()
 const router = useRouter()
 const appStore = useAppStore()
+const userStore = useUserStore()
 const { theme } = storeToRefs(appStore)
 
 const isDark = computed(() => theme.value === 'dark')
@@ -121,6 +124,14 @@ const isDark = computed(() => theme.value === 'dark')
 const currentTitle = computed(() => {
   const title = route.meta.title as string
   return title || route.path.replace('/', '') || '控制台'
+})
+
+const userAvatar = computed(() => {
+  return userStore.userInfo?.nickname?.[0]?.toUpperCase() || 'U'
+})
+
+const userName = computed(() => {
+  return userStore.userInfo?.nickname || userStore.userInfo?.username || '用户'
 })
 
 const toggleTheme = () => {
@@ -138,6 +149,7 @@ const handleCommand = async (cmd: string) => {
         type: 'warning',
         confirmButtonClass: 'el-button--danger'
       })
+      userStore.userInfo = null
       localStorage.removeItem('token')
       ElMessage.success('已退出')
       router.push('/login')
@@ -265,6 +277,13 @@ const handleCommand = async (cmd: string) => {
     &:hover,
     &:focus-visible {
       background: oklch(50% 0.16 28 / 0.06);
+    }
+
+    .user-avatar-img {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      object-fit: cover;
     }
 
     .user-avatar {

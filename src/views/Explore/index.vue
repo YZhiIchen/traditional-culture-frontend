@@ -181,8 +181,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import request from '@/utils/request'
 
 const router = useRouter()
 
@@ -247,7 +248,7 @@ interface FeaturedItem {
   visual: string
 }
 
-const allFeatured: FeaturedItem[] = [
+const allFeatured = ref<FeaturedItem[]>([
   {
     id: 'feat-01', title: '千里江山图', desc: '北宋青绿山水巅峰之作，以矿物颜料绘出壮丽山河，体现了宋代宫廷绘画的最高成就……', dynasty: '宋', author: '王希孟', category: '绘画',
     bg: 'linear-gradient(135deg, oklch(85% 0.04 145 / 0.3), oklch(75% 0.06 145 / 0.2))',
@@ -284,10 +285,10 @@ const allFeatured: FeaturedItem[] = [
     accent: 'oklch(55% 0.08 70)',
     visual: '<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="oklch(55% 0.08 70)" stroke-width="1" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>'
   }
-]
+])
 
 const filteredFeatured = computed(() => {
-  return allFeatured.filter(item => {
+  return allFeatured.value.filter(item => {
     if (activeDynasty.value && item.dynasty !== activeDynasty.value) return false
     if (activeCategory.value) {
       const cat = categories.find(c => c.key === activeCategory.value)
@@ -322,7 +323,7 @@ const wordCloud = [
 ]
 
 // ── 关联图谱边 ──
-const graphEdges = [
+const graphEdges = ref([
   { from: '王维', relation: '开创', to: '文人山水画' },
   { from: '苏轼', relation: '影响', to: '宋代书法' },
   { from: '敦煌', relation: '交汇', to: '丝绸之路' },
@@ -330,7 +331,7 @@ const graphEdges = [
   { from: '颜真卿', relation: '传承', to: '唐代楷书' },
   { from: '诗经', relation: '影响', to: '后世诗词' },
   { from: '佛教', relation: '催生', to: '石窟艺术' }
-]
+])
 
 const navigateToSearch = (keyword: string) => {
   router.push(`/search?keyword=${encodeURIComponent(keyword)}`)
@@ -346,6 +347,37 @@ const goSearchWithFilter = () => {
 const goDetail = (id: string) => {
   router.push(`/recognition/${id}`)
 }
+
+// 从后端加载数据
+onMounted(async () => {
+  try {
+    const recommend: any = await request.get('/explore/recommend')
+    if (recommend?.length) {
+      allFeatured.value = []
+      recommend.forEach((r: any) => {
+        const categoryList = ['绘画', '书法', '文献', '器物', '石窟']
+        allFeatured.value.push({
+          id: r.id,
+          title: r.title,
+          desc: r.desc,
+          dynasty: r.dynasty,
+          author: r.author,
+          category: r.category || categoryList[allFeatured.length % 5],
+          bg: 'linear-gradient(135deg, oklch(85% 0.02 55 / 0.3), oklch(75% 0.03 40 / 0.2))',
+          accent: 'var(--cinnabar)',
+          visual: '<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>'
+        })
+      })
+    }
+
+    const graph: any = await request.get('/explore/graph')
+    if (graph?.length) {
+      graphEdges.value = graph.slice(0, 7)
+    }
+  } catch {
+    // 保留 mock 数据
+  }
+})
 </script>
 
 <style scoped lang="scss">

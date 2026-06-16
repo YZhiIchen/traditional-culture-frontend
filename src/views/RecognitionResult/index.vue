@@ -4,7 +4,7 @@
     <div class="page-lead animate-fade-in-up">
       <div class="lead-badge">
         <span class="badge-line" />
-        <span class="badge-text">03 · 识别详情</span>
+        <span class="badge-text">识别 · 详情</span>
         <span class="badge-line" />
       </div>
 
@@ -240,6 +240,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import * as echarts from 'echarts'
 import type { RecognitionResult } from '@/types'
+import { getRecognitionResultApi } from '@/api/recognition'
 
 const route = useRoute()
 const router = useRouter()
@@ -325,25 +326,8 @@ const fetchData = async () => {
 
   loading.value = true
   try {
-    await new Promise((r) => setTimeout(r, 500))
-    data.value = {
-      id,
-      fileId: 'file-001',
-      fileName: '示例文件.jpg',
-      fileType: 'image',
-      recognitionTime: new Date().toLocaleString('zh-CN'),
-      result: {
-        title: '山水图卷',
-        dynasty: '唐',
-        author: '王维（传）',
-        description: '此卷以水墨描绘江南山水景致，山峦叠嶂，云雾缭绕，意境深远。',
-        tags: ['山水', '水墨', '唐代', '王维'],
-        content: '空山不见人，但闻人语响。返景入深林，复照青苔上。',
-        confidence: 0.87
-      },
-      rawData: { content: '空山不见人，但闻人语响。返景入深林，复照青苔上。' }
-    }
-
+    const res = await getRecognitionResultApi(id)
+    data.value = res as unknown as RecognitionResult
     await nextTick()
     initChart()
   } catch {

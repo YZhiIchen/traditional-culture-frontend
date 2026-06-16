@@ -36,13 +36,23 @@
 </template>
 
 <script setup lang="ts">
+import { onMounted } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useAppStore } from '@/stores/app'
+import { useUserStore } from '@/stores/user'
 import Sidebar from './Sidebar.vue'
 import Navbar from './Navbar.vue'
 
 const appStore = useAppStore()
+const userStore = useUserStore()
 const { sidebarCollapsed } = storeToRefs(appStore)
+
+// 页面刷新后重新加载用户信息
+onMounted(() => {
+  if (localStorage.getItem('token') && !userStore.userInfo) {
+    userStore.fetchUserInfo().catch(() => {})
+  }
+})
 </script>
 
 <style scoped lang="scss">

@@ -32,15 +32,15 @@
 
           <div class="avatar-stats">
             <div class="stat">
-              <span class="stat-num">12</span>
+              <span class="stat-num">{{ uploadCount }}</span>
               <span class="stat-label">上传</span>
             </div>
             <div class="stat">
-              <span class="stat-num">8</span>
+              <span class="stat-num">{{ recognizeCount }}</span>
               <span class="stat-label">识别</span>
             </div>
             <div class="stat">
-              <span class="stat-num">3</span>
+              <span class="stat-num">{{ favoriteCount }}</span>
               <span class="stat-label">收藏</span>
             </div>
           </div>
@@ -74,6 +74,21 @@
           </div>
 
           <div class="section-body">
+            <!-- 头像（带笔图标） -->
+            <div class="avatar-edit-wrap">
+              <div class="avatar-circle">
+                <img v-if="avatarUrl" :src="avatarUrl" class="avatar-img" alt="头像" />
+                <span v-else class="avatar-initial">{{ currentInitial }}</span>
+              </div>
+              <div class="avatar-edit-btn" @click="triggerFileSelect" title="修改头像">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                  <path d="M12 20h9" />
+                  <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+                </svg>
+              </div>
+              <input ref="fileInput" type="file" accept="image/jpeg,image/png" hidden @change="handleAvatarChange" />
+            </div>
+
             <el-form
               ref="formRef"
               :model="localForm"
@@ -149,6 +164,19 @@
               </el-form-item>
             </el-form>
           </div>
+
+          <!-- 密码修改按钮 -->
+          <div class="pwd-actions">
+            <button class="action-btn" :class="{ loading: pwdSaving }" :disabled="pwdSaving" @click="changePassword">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                   stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                   stroke-linejoin="round">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+              </svg>
+              {{ pwdSaving ? '修改中 …' : '修改密码' }}
+            </button>
+          </div>
         </div>
 
         <!-- 操作按钮 -->
@@ -174,6 +202,15 @@
             </svg>
             退出登录
           </button>
+          <button class="ghost-btn danger-outline" @click="handleDeleteAccount">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
+                 stroke-linejoin="round">
+              <polyline points="3 6 5 6 21 6" />
+              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+            </svg>
+            注销账号
+          </button>
         </div>
       </div>
     </div>
@@ -181,24 +218,63 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, ref } from 'vue'
+import { reactive, ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
+import { getUserInfoApi } from '@/api/auth'
+import request from '@/utils/request'
+import { useUserStore } from '@/stores/user'
 
 const router = useRouter()
+const userStore = useUserStore()
 const formRef = ref<FormInstance>()
 const pwdFormRef = ref<FormInstance>()
 const saving = ref(false)
+const pwdSaving = ref(false)
 
 const lastLogin = new Date().toLocaleString('zh-CN')
 
 const localForm = reactive({
-  nickname: 'YangZhi',
-  username: 'yangzhi',
-  email: 'yangzhi@example.com',
-  bio: '传统文化爱好者 · 数字传承践行者'
+  nickname: '',
+  username: '',
+  email: '',
+  bio: ''
 })
+
+// 用户统计数据
+const uploadCount = ref('0')
+const recognizeCount = ref('0')
+const favoriteCount = ref('0')
+
+// 头像
+const avatarUrl = ref('')
+const fileInput = ref<HTMLInputElement>()
+const currentInitial = computed(() => localForm.nickname?.[0]?.toUpperCase() || 'U')
+
+const triggerFileSelect = () => {
+  fileInput.value?.click()
+}
+
+const handleAvatarChange = async (e: Event) => {
+  const input = e.target as HTMLInputElement
+  const file = input.files?.[0]
+  if (!file) return
+
+  // 预览
+  const reader = new FileReader()
+  reader.onload = (ev) => { avatarUrl.value = ev.target?.result as string }
+  reader.readAsDataURL(file)
+
+  // 上传
+  try {
+    const res: any = await request.upload('/user/avatar', file)
+    if (res?.avatar) avatarUrl.value = res.avatar
+    ElMessage.success('头像已更新')
+  } catch (e: any) {
+    ElMessage.error(e.message || '头像上传失败')
+  }
+}
 
 const rules: FormRules = {
   nickname: [{ required: true, message: '请输入昵称', trigger: 'blur' }],
@@ -240,27 +316,72 @@ const pwdRules: FormRules = {
 }
 
 const saveProfile = async () => {
-  if (!formRef.value || !pwdFormRef.value) return
+  if (!formRef.value) return
 
-  const okProfile = await formRef.value.validate().catch(() => false)
-  const okPwd = await pwdFormRef.value.validate().catch(() => false)
-
-  if (!okProfile || !okPwd) {
-    ElMessage.warning('请检查表单填写')
-    return
-  }
+  const ok = await formRef.value.validate().catch(() => false)
+  if (!ok) return
 
   saving.value = true
-  await new Promise((r) => setTimeout(r, 800))
-  saving.value = false
-
-  // 清空密码表单
-  pwdForm.current = ''
-  pwdForm.newPwd = ''
-  pwdForm.confirm = ''
-
-  ElMessage.success('个人信息已更新')
+  try {
+    await request.put('/user/profile', {
+      nickname: localForm.nickname,
+      email: localForm.email,
+      bio: localForm.bio
+    })
+    // 如果 userStore 有 fetchUserInfo，同步刷新
+    try { userStore.fetchUserInfo() } catch {}
+    ElMessage.success('个人信息已更新')
+  } catch (e: any) {
+    ElMessage.error(e.message || '更新失败')
+  } finally {
+    saving.value = false
+  }
 }
+
+// 修改密码（独立按钮触发）
+const changePassword = async () => {
+  if (!pwdFormRef.value) return
+
+  const ok = await pwdFormRef.value.validate().catch(() => false)
+  if (!ok) return
+
+  pwdSaving.value = true
+  try {
+    await request.put('/user/password', {
+      current: pwdForm.current,
+      newPwd: pwdForm.newPwd
+    })
+    ElMessage.success('密码已修改')
+    pwdForm.current = ''
+    pwdForm.newPwd = ''
+    pwdForm.confirm = ''
+  } catch (e: any) {
+    ElMessage.error(e.message || '密码修改失败')
+  } finally {
+    pwdSaving.value = false
+  }
+}
+
+// 加载用户数据
+onMounted(async () => {
+  try {
+    const info = await getUserInfoApi()
+    localForm.nickname = (info as any).nickname || ''
+    localForm.username = (info as any).username || ''
+    localForm.email = (info as any).email || ''
+    localForm.bio = (info as any).bio || ''
+
+    // 加载统计
+    const stats: any = await request.get('/dashboard/stats')
+    uploadCount.value = String(stats.totalResources || 0)
+    recognizeCount.value = String(stats.totalRecognized || 0)
+
+    const favs: any = await request.get('/favorite/list')
+    favoriteCount.value = String(favs?.length || 0)
+  } catch {
+    // 静默
+  }
+})
 
 const resetProfile = () => {
   ElMessage.info('已重置')
@@ -276,6 +397,27 @@ const handleLogout = async () => {
     })
     localStorage.removeItem('token')
     ElMessage.success('已退出')
+    router.push('/login')
+  } catch {
+    /* cancelled */
+  }
+}
+
+const handleDeleteAccount = async () => {
+  try {
+    await ElMessageBox.confirm(
+      '确定要注销账号？此操作不可撤销，所有个人数据将被匿名化处理。',
+      '注销账号',
+      { confirmButtonText: '确认注销', cancelButtonText: '取消', type: 'warning', confirmButtonClass: 'el-button--danger' }
+    )
+    await ElMessageBox.confirm(
+      '账号注销后上传记录将被匿名化，数据保留30天后彻底清除。是否继续？',
+      '再次确认',
+      { confirmButtonText: '确认注销', cancelButtonText: '取消', type: 'error', confirmButtonClass: 'el-button--danger' }
+    )
+    await request.delete('/user/account')
+    ElMessage.success('账号已注销')
+    localStorage.removeItem('token')
     router.push('/login')
   } catch {
     /* cancelled */
@@ -484,6 +626,57 @@ const handleLogout = async () => {
     }
   }
 
+  // ── 头像编辑（笔图标悬浮）──
+  .avatar-edit-wrap {
+    position: relative;
+    width: 100px;
+    height: 100px;
+    margin: 0 auto var(--space-lg);
+
+    .avatar-circle {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--cinnabar), oklch(40% 0.14 28));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+
+      .avatar-img { width: 100%; height: 100%; object-fit: cover; }
+
+      .avatar-initial {
+        font-family: var(--font-heading);
+        font-size: 38px;
+        font-weight: 700;
+        color: #fff;
+      }
+    }
+
+    .avatar-edit-btn {
+      position: absolute;
+      right: 0;
+      bottom: 6px;
+      width: 32px;
+      height: 32px;
+      background: #fff;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+      cursor: pointer;
+      color: #666;
+      transition: all var(--transition-fast);
+
+      &:hover {
+        background: #f0f0f0;
+        color: var(--cinnabar);
+        transform: scale(1.1);
+      }
+    }
+  }
+
   // ── 表单 ──
   .profile-form {
     :deep(.el-form-item) { margin-bottom: 18px; }
@@ -606,6 +799,18 @@ const handleLogout = async () => {
       border-color: oklch(50% 0.16 28 / 0.2);
 
       &:hover { background: oklch(50% 0.16 28 / 0.06); }
+    }
+
+    &.danger-outline {
+      color: var(--cinnabar);
+      border-color: oklch(50% 0.16 28 / 0.15);
+      opacity: 0.55;
+
+      &:hover {
+        opacity: 1;
+        background: oklch(50% 0.16 28 / 0.06);
+        border-color: var(--cinnabar);
+      }
     }
   }
 }

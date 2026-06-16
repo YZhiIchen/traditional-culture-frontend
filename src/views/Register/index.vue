@@ -119,6 +119,7 @@ import { reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
+import { registerApi } from '@/api/auth'
 
 const router = useRouter()
 const formRef = ref<FormInstance>()
@@ -167,7 +168,11 @@ const handleRegister = async () => {
     submitting.value = true
 
     try {
-      await new Promise((r) => setTimeout(r, 1000))
+      await registerApi({
+        username: form.username,
+        password: form.password,
+        nickname: form.nickname
+      })
       ElMessage.success('注册成功，请登录')
       router.push('/login')
     } catch (e: any) {

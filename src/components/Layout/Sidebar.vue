@@ -124,6 +124,47 @@
         </router-link>
       </li>
 
+      <li v-if="isAdmin">
+        <router-link
+          to="/admin"
+          class="nav-item"
+          :class="{ active: isActive('/admin') }"
+          :title="collapsed ? '用户管理' : undefined"
+        >
+          <span class="nav-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+              <circle cx="9" cy="7" r="4" />
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+              <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+            </svg>
+          </span>
+          <transition name="nav-text">
+            <span v-if="!collapsed" class="nav-label">用户管理</span>
+          </transition>
+          <span v-if="!collapsed" class="nav-indicator" />
+        </router-link>
+      </li>
+
+      <li>
+        <router-link
+          to="/favorites"
+          class="nav-item"
+          :class="{ active: isActive('/favorites') }"
+          :title="collapsed ? '我的收藏' : undefined"
+        >
+          <span class="nav-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+            </svg>
+          </span>
+          <transition name="nav-text">
+            <span v-if="!collapsed" class="nav-label">我的收藏</span>
+          </transition>
+          <span v-if="!collapsed" class="nav-indicator" />
+        </router-link>
+      </li>
+
       <li>
         <router-link
           to="/profile"
@@ -165,16 +206,20 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
+import { useUserStore } from '@/stores/user'
 
 const props = defineProps<{
   collapsed: boolean
 }>()
 
 const route = useRoute()
+const userStore = useUserStore()
 
 const isActive = (path: string) => {
   return route.path.startsWith(path)
 }
+
+const isAdmin = computed(() => userStore.userInfo?.role === 'admin')
 </script>
 
 <style scoped lang="scss">

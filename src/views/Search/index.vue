@@ -4,7 +4,7 @@
     <div class="page-lead animate-fade-in-up">
       <div class="lead-badge">
         <span class="badge-line" />
-        <span class="badge-text">02 · 检索</span>
+        <span class="badge-text">资源 · 检索</span>
         <span class="badge-line" />
       </div>
       <h1 class="lead-title">资源检索</h1>
@@ -127,13 +127,24 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, onMounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
+import { searchApi } from '@/api/search'
 
+const route = useRoute()
 const router = useRouter()
 
 const keyword = ref('')
+
+// 从 URL 参数读取初始关键词
+onMounted(() => {
+  const kw = route.query.keyword as string
+  if (kw) {
+    keyword.value = kw
+    handleSearch()
+  }
+})
 const searching = ref(false)
 const hasSearched = ref(false)
 
@@ -147,7 +158,7 @@ interface ResultItem {
 
 const items = ref<ResultItem[]>([])
 
-const handleSearch = () => {
+const handleSearch = async () => {
   const q = keyword.value.trim()
   if (!q) {
     ElMessage.warning('请输入检索关键词')
@@ -157,34 +168,22 @@ const handleSearch = () => {
   searching.value = true
   hasSearched.value = true
 
-  setTimeout(() => {
+  try {
+    const res = await searchApi({ keyword: q, page: 1, pageSize: 20 })
+    items.value = (res.list || []).map((r: any) => ({
+      id: r.id,
+      title: r.title || '',
+      summary: r.summary || '',
+      dynasty: r.dynasty || '',
+      date: r.createTime || ''
+    }))
+    ElMessage.success(`找到 ${res.total} 条结果`)
+  } catch (e: any) {
+    ElMessage.error(e.message || '检索失败')
+    items.value = []
+  } finally {
     searching.value = false
-    // 模拟结果
-    items.value = [
-      {
-        id: 'res-1',
-        title: `「${q}」相关 · 示例一`,
-        summary: '在传统文化数字馆藏中发现的相关内容摘要，展示了数字化保存的成果…',
-        dynasty: '唐代',
-        date: '2026-06'
-      },
-      {
-        id: 'res-2',
-        title: `「${q}」相关 · 示例二`,
-        summary: '智能识别技术在本平台中的应用，为传统文化的保护与传承提供了新可能…',
-        dynasty: '宋代',
-        date: '2026-05'
-      },
-      {
-        id: 'res-3',
-        title: `「${q}」相关 · 示例三`,
-        summary: '通过数字化手段，让更多人了解与接触传统文化的精髓与魅力…',
-        dynasty: '明代',
-        date: '2026-04'
-      }
-    ]
-    ElMessage.success(`找到 ${items.value.length} 条结果`)
-  }, 600)
+  }
 }
 
 const goDetail = (item: ResultItem) => {

@@ -65,18 +65,51 @@
       <div class="skeleton-row" v-for="n in 5" :key="n" />
     </div>
 
+    <!-- 批量操作栏 -->
+    <div v-if="selectedIds.length > 0" class="batch-bar animate-fade-in">
+      <span class="batch-count">已选 {{ selectedIds.length }} 项</span>
+      <button class="batch-delete-btn" @click="batchDelete">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
+             stroke-linejoin="round">
+          <polyline points="3 6 5 6 21 6" />
+          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+        </svg>
+        批量删除
+      </button>
+      <button class="batch-action-btn" @click="batchFavorite">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+        </svg>
+        批量收藏
+      </button>
+      <button class="batch-action-btn" @click="batchUnfavorite">取消收藏</button>
+      <button class="batch-cancel-btn" @click="selectedIds = []">取消选择</button>
+    </div>
+
     <!-- 列表 -->
-    <div v-else class="history-list">
+    <div class="history-list">
       <div
         v-for="(item, idx) in filteredList"
         :key="item.id"
         class="history-card animate-fade-in-up"
         :style="{ animationDelay: `${0.06 * idx}s` }"
-        @click="goDetail(item.id)"
+        :class="{ selected: selectedIds.includes(item.id) }"
       >
+        <!-- 选择框 -->
+        <div class="card-checkbox" @click.stop>
+          <input
+            type="checkbox"
+            :checked="selectedIds.includes(item.id)"
+            @change="toggleSelect(item.id)"
+            class="select-checkbox"
+          />
+        </div>
         <!-- 缩略图 -->
         <div class="card-thumb">
-          <div v-if="item.fileType === 'image'" class="thumb-img">
+          <img v-if="item.fileType === 'image' && item.fileUrl" :src="item.fileUrl"
+               class="thumb-real" alt="预览" />
+          <div v-else-if="item.fileType === 'image'" class="thumb-img">
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none"
                  stroke="currentColor" stroke-width="1" stroke-linecap="round"
                  stroke-linejoin="round">
@@ -203,9 +236,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { getRecognitionHistoryApi } from '@/api/recognition'
+import request from '@/utils/request'
 
 const router = useRouter()
 
@@ -221,11 +256,12 @@ const typeFilter = [
   { key: 'text' as const, label: '文本' }
 ]
 
-// ── 模拟数据 ──
+// ── 数据类型 ──
 interface HistoryItem {
   id: string
   title: string
   fileType: 'image' | 'text'
+  fileUrl?: string
   dynasty?: string
   author?: string
   tags: string[]
@@ -234,58 +270,70 @@ interface HistoryItem {
   status: 'done' | 'processing'
 }
 
-const mockData: HistoryItem[] = [
-  { id: 'rec-01', title: '敦煌飞天壁画残卷', fileType: 'image', dynasty: '唐', author: '佚名', tags: ['敦煌', '飞天', '佛教', '壁画', '唐代'], confidence: 0.92, recognitionTime: '2026-06-15 15:30', status: 'done' },
-  { id: 'rec-02', title: '《兰亭序》冯承素摹本', fileType: 'image', dynasty: '东晋', author: '王羲之', tags: ['书法', '行书', '兰亭序', '东晋', '摹本'], confidence: 0.88, recognitionTime: '2026-06-15 14:12', status: 'done' },
-  { id: 'rec-03', title: '青花缠枝莲纹梅瓶', fileType: 'image', dynasty: '明', author: '景德镇窑', tags: ['青花', '瓷器', '明代', '缠枝莲', '瓶'], confidence: 0.95, recognitionTime: '2026-06-15 11:45', status: 'done' },
-  { id: 'rec-04', title: '《诗经·关雎》', fileType: 'text', dynasty: '先秦', author: '佚名', tags: ['诗经', '国风', '先秦', '诗歌'], confidence: 0.97, recognitionTime: '2026-06-14 16:20', status: 'done' },
-  { id: 'rec-05', title: '云冈石窟第20窟造像拓片', fileType: 'image', dynasty: '北魏', author: '佚名', tags: ['石窟', '佛教', '北魏', '造像', '云冈'], confidence: 0.79, recognitionTime: '2026-06-14 09:30', status: 'done' },
-  { id: 'rec-06', title: '《清明上河图》局部', fileType: 'image', dynasty: '宋', author: '张择端', tags: ['风俗画', '宋代', '汴京', '长卷'], confidence: 0.91, recognitionTime: '2026-06-13 15:00', status: 'done' },
-  { id: 'rec-07', title: '《金刚经》唐咸通九年刻本', fileType: 'image', dynasty: '唐', author: '佚名', tags: ['佛教', '金刚经', '刻本', '唐代', '敦煌'], confidence: 0.85, recognitionTime: '2026-06-13 10:15', status: 'done' },
-  { id: 'rec-08', title: '《赤壁赋》苏轼', fileType: 'text', dynasty: '宋', author: '苏轼', tags: ['宋词', '苏轼', '赤壁', '文学', '宋代'], confidence: 0.96, recognitionTime: '2026-06-12 14:30', status: 'done' },
-  { id: 'rec-09', title: '汉代画像石·车马出行图', fileType: 'image', dynasty: '汉', author: '佚名', tags: ['画像石', '汉代', '车马', '石刻'], confidence: 0.83, recognitionTime: '2026-06-12 08:45', status: 'done' },
-  { id: 'rec-10', title: '《富春山居图》剩山图卷', fileType: 'image', dynasty: '元', author: '黄公望', tags: ['山水', '元代', '水墨', '长卷', '文人画'], confidence: 0.89, recognitionTime: '2026-06-11 16:00', status: 'processing' }
-]
-
 let debounceTimer: ReturnType<typeof setTimeout>
 
 const fullList = ref<HistoryItem[]>([])
+const totalCount = ref(0)
 
 const filteredList = computed(() => {
-  let list = fullList.value
-
-  if (activeType.value !== 'all') {
-    list = list.filter(item => item.fileType === activeType.value)
-  }
-
-  if (searchKeyword.value.trim()) {
-    const kw = searchKeyword.value.trim().toLowerCase()
-    list = list.filter(item =>
-      item.title.toLowerCase().includes(kw) ||
-      item.dynasty?.toLowerCase().includes(kw) ||
-      item.author?.toLowerCase().includes(kw) ||
-      item.tags.some(t => t.toLowerCase().includes(kw))
-    )
-  }
-
-  const start = (page.value - 1) * pageSize.value
-  return list.slice(start, start + pageSize.value)
+  return fullList.value
 })
 
 const totalPages = computed(() => {
-  let list = fullList.value
-  if (activeType.value !== 'all') list = list.filter(i => i.fileType === activeType.value)
-  if (searchKeyword.value.trim()) {
-    const kw = searchKeyword.value.trim().toLowerCase()
-    list = list.filter(item =>
-      item.title.toLowerCase().includes(kw) ||
-      item.dynasty?.toLowerCase().includes(kw) ||
-      item.author?.toLowerCase().includes(kw) ||
-      item.tags.some(t => t.toLowerCase().includes(kw))
-    )
-  }
-  return Math.max(1, Math.ceil(list.length / pageSize.value))
+  return Math.max(1, Math.ceil(totalCount.value / pageSize.value))
 })
+
+// 批量选择
+const selectedIds = ref<string[]>([])
+
+const toggleSelect = (id: string) => {
+  const idx = selectedIds.value.indexOf(id)
+  if (idx === -1) {
+    selectedIds.value.push(id)
+  } else {
+    selectedIds.value.splice(idx, 1)
+  }
+}
+
+const batchDelete = async () => {
+  if (selectedIds.value.length === 0) return
+  try {
+    await ElMessageBox.confirm(`确定删除选中的 ${selectedIds.value.length} 条记录？`, '批量删除', {
+      confirmButtonText: '删除',
+      cancelButtonText: '取消',
+      type: 'warning',
+      confirmButtonClass: 'el-button--danger'
+    })
+    const ids = selectedIds.value.slice()
+    await Promise.all(ids.map(id => request.delete(`/recognition/${id}`)))
+    fullList.value = fullList.value.filter(i => !selectedIds.value.includes(i.id))
+    totalCount.value -= ids.length
+    selectedIds.value = []
+    ElMessage.success('批量删除完成')
+  } catch {
+    // 取消
+  }
+}
+
+const batchFavorite = async () => {
+  if (selectedIds.value.length === 0) return
+  try {
+    const ids = selectedIds.value.slice()
+    await Promise.all(ids.map(id => request.post(`/favorite/${id}`)))
+    ElMessage.success(`已收藏 ${ids.length} 项`)
+    selectedIds.value = []
+  } catch { /* */ }
+}
+
+const batchUnfavorite = async () => {
+  if (selectedIds.value.length === 0) return
+  try {
+    const ids = selectedIds.value.slice()
+    await Promise.all(ids.map(id => request.delete(`/favorite/${id}`)))
+    ElMessage.success(`已取消收藏 ${ids.length} 项`)
+    selectedIds.value = []
+  } catch { /* */ }
+}
 
 const pct = (val: number | undefined) => {
   if (val === undefined || val === null) return '--'
@@ -318,6 +366,32 @@ const exportItem = (item: HistoryItem) => {
   ElMessage.success('已导出')
 }
 
+const fetchHistory = async () => {
+  loading.value = true
+  try {
+    const params: any = { page: page.value, pageSize: pageSize.value }
+    if (activeType.value !== 'all') params.type = activeType.value
+    if (searchKeyword.value.trim()) params.keyword = searchKeyword.value.trim()
+    const res: any = await getRecognitionHistoryApi(params)
+    fullList.value = (res.list || []).map((r: any) => ({
+      id: r.id,
+      title: r.result?.title || r.fileName,
+      fileType: r.fileType,
+      fileUrl: r.fileUrl || undefined,
+      dynasty: r.result?.dynasty,
+      author: r.result?.author,
+      tags: r.result?.tags || [],
+      confidence: r.result?.confidence || 0,
+      recognitionTime: r.recognitionTime || '',
+      status: r.status === 'completed' ? 'done' : 'processing'
+    }))
+    totalCount.value = res.total || 0
+    loading.value = false
+  } catch {
+    loading.value = false
+  }
+}
+
 const deleteItem = async (item: HistoryItem) => {
   try {
     await ElMessageBox.confirm(`确定删除「${item.title}」的识别记录？`, '删除确认', {
@@ -326,20 +400,26 @@ const deleteItem = async (item: HistoryItem) => {
       type: 'warning',
       confirmButtonClass: 'el-button--danger'
     })
+    await request.delete(`/recognition/${item.id}`)
     fullList.value = fullList.value.filter(i => i.id !== item.id)
     ElMessage.success('已删除')
   } catch {
-    // 取消
+    // 取消或失败
   }
 }
 
-const handleRefresh = () => {
-  loading.value = true
-  setTimeout(() => {
-    loading.value = false
-    ElMessage.success('已刷新')
-  }, 500)
+const handleRefresh = async () => {
+  await fetchHistory()
+  ElMessage.success('已刷新')
 }
+
+onMounted(() => {
+  fetchHistory()
+})
+
+watch([page, activeType, searchKeyword], () => {
+  fetchHistory()
+})
 
 </script>
 
@@ -536,6 +616,77 @@ const handleRefresh = () => {
     }
   }
 
+  // ── 批量操作栏 ──
+  .batch-bar {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+    padding: 8px var(--space-lg);
+    background: oklch(50% 0.16 28 / 0.04);
+    border: 1px solid var(--cinnabar);
+    border-radius: var(--radius-lg);
+    margin-bottom: var(--space-md);
+
+    .batch-count {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--cinnabar);
+    }
+
+    .batch-delete-btn, .batch-action-btn, .batch-cancel-btn {
+      all: unset;
+      font-size: 12px;
+      padding: 4px 14px;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      transition: all var(--transition-fast);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .batch-delete-btn {
+      background: var(--cinnabar);
+      color: #fff;
+      &:hover { opacity: 0.85; }
+    }
+
+    .batch-action-btn {
+      background: var(--azure);
+      color: #fff;
+      &:hover { opacity: 0.85; }
+    }
+
+    .batch-cancel-btn {
+      border: 1px solid var(--border-color);
+      color: var(--text-secondary);
+      &:hover { border-color: var(--ink-400); }
+    }
+  }
+
+  // ── 复选框 ──
+  .card-checkbox {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    padding-right: 4px;
+    position: relative;
+    z-index: 2;
+
+    .select-checkbox {
+      width: 16px;
+      height: 16px;
+      accent-color: var(--cinnabar);
+      cursor: pointer;
+    }
+  }
+
+  // ── 选中高亮 ──
+  .history-card.selected {
+    border-color: var(--cinnabar);
+    background: oklch(50% 0.16 28 / 0.03);
+  }
+
   .card-thumb {
     width: 56px;
     height: 56px;
@@ -547,6 +698,15 @@ const handleRefresh = () => {
     flex-shrink: 0;
     color: var(--cinnabar);
     opacity: 0.6;
+    overflow: hidden;
+  }
+
+  .thumb-real {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0.85;
+    display: block;
   }
 
   .card-body {

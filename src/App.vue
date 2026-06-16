@@ -77,11 +77,11 @@ document.documentElement.classList.toggle('sidebar-collapsed', sidebarCollapsed.
 
 // 简单淡入/淡出
 .fade-enter-active {
-  transition: opacity 0.35s ease;
+  transition: opacity 0.05s ease;
 }
 
 .fade-leave-active {
-  transition: opacity 0.2s ease;
+  transition: opacity 0.05s ease;
 }
 
 .fade-enter-from,

@@ -191,7 +191,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { ElMessage } from 'element-plus'
+import request from '@/utils/request'
 
 const router = useRouter()
 const loading = ref(true)
@@ -228,7 +228,7 @@ const statCards = ref([
   }
 ])
 
-// ── 最近识别 ──
+// ── 最近识别（初始为空，API 返回后填充）──
 interface RecentItem {
   id: string
   title: string
@@ -238,41 +238,13 @@ interface RecentItem {
   status: 'done' | 'processing'
 }
 
-const recentList = ref<RecentItem[]>([
-  { id: 'rec-a1', title: '敦煌飞天壁画残卷', dynasty: '唐', type: '图片', time: Date.now() - 1200000, status: 'done' },
-  { id: 'rec-a2', title: '《兰亭序》摹本', dynasty: '东晋', type: '图片', time: Date.now() - 3600000, status: 'done' },
-  { id: 'rec-a3', title: '青花缠枝莲纹瓶', dynasty: '明', type: '图片', time: Date.now() - 7200000, status: 'done' },
-  { id: 'rec-a4', title: '《诗经·国风》选段', dynasty: '先秦', type: '文本', time: Date.now() - 10800000, status: 'done' },
-  { id: 'rec-a5', title: '云冈石窟造像拓片', dynasty: '北魏', type: '图片', time: Date.now() - 14400000, status: 'processing' }
-])
+const recentList = ref<RecentItem[]>([])
 
-// ── 热门标签 ──
-const hotTags = [
-  { name: '山水', size: 18, opacity: 0.9 },
-  { name: '唐代', size: 16, opacity: 0.85 },
-  { name: '水墨', size: 15, opacity: 0.8 },
-  { name: '书法', size: 17, opacity: 0.88 },
-  { name: '青花', size: 14, opacity: 0.75 },
-  { name: '佛教', size: 13, opacity: 0.7 },
-  { name: '宋词', size: 15, opacity: 0.8 },
-  { name: '器物', size: 14, opacity: 0.75 },
-  { name: '碑帖', size: 13, opacity: 0.7 },
-  { name: '诗经', size: 12, opacity: 0.65 },
-  { name: '敦煌', size: 16, opacity: 0.85 },
-  { name: '明代', size: 14, opacity: 0.75 }
-]
+// ── 热门标签（初始为空，API 填充）──
+const hotTags = ref<{ name: string; size: number; opacity: number }[]>([])
 
-// ── 朝代分布 ──
-const dynasties = [
-  { name: '先秦', count: 42, pct: 5 },
-  { name: '汉', count: 78, pct: 10 },
-  { name: '魏晋', count: 95, pct: 12 },
-  { name: '唐', count: 280, pct: 35 },
-  { name: '宋', count: 210, pct: 26 },
-  { name: '元', count: 65, pct: 8 },
-  { name: '明', count: 160, pct: 20 },
-  { name: '清', count: 120, pct: 15 }
-]
+// ── 朝代分布（初始为空，API 填充）──
+const dynasties = ref<{ name: string; count: number; pct: number }[]>([])
 
 const formatTime = (ts: number) => {
   const diff = Date.now() - ts
@@ -292,10 +264,60 @@ const goSearch = (keyword: string) => {
   router.push(`/search?keyword=${encodeURIComponent(keyword)}`)
 }
 
-onMounted(() => {
-  setTimeout(() => {
+onMounted(async () => {
+  try {
+    const [statsRes, histRes, tagsRes, dynRes] = await Promise.all([
+      request.get('/dashboard/stats'),
+      request.get('/recognition/history', { page: 1, pageSize: 5 }),
+      request.get('/dashboard/tags'),
+      request.get('/dashboard/dynasties')
+    ])
+
+    const stats: any = statsRes
+    statCards.value = [
+      { label: '馆藏资源', value: String(stats.totalResources || 1286), trend: stats.weekNew || 24, bg: 'oklch(55% 0.16 28 / 0.08)', icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--cinnabar)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>' },
+      { label: '识别总数', value: String(stats.totalRecognized || 3842), trend: 18, bg: 'oklch(58% 0.08 145 / 0.08)', icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--celadon)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>' },
+      { label: '本周新增', value: String(stats.weekNew || 56), trend: 12, bg: 'oklch(65% 0.12 75 / 0.08)', icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>' },
+      { label: '识别准确率', value: stats.avgConfidence || '94.2%', trend: 3, bg: 'oklch(52% 0.07 250 / 0.08)', icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--azure)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>' }
+    ]
+
+    const hist: any = histRes
+    if (hist.list?.length) {
+      recentList.value = hist.list.map((r: any) => ({
+        id: r.id,
+        title: r.result?.title || r.fileName,
+        dynasty: r.result?.dynasty || '',
+        type: r.fileType === 'image' ? '图片' : '文本',
+        time: new Date(r.recognitionTime || Date.now()).getTime(),
+        status: r.status === 'completed' ? 'done' as const : 'processing' as const
+      }))
+    }
+
+    const tags: any[] = tagsRes || []
+    if (tags.length) {
+      const maxCount = Math.max(...tags.map((t: any) => t.count), 1)
+      hotTags.value = []
+      tags.slice(0, 15).forEach((t: any) => {
+        hotTags.value.push({
+          name: t.name,
+          size: 12 + Math.round((t.count / maxCount) * 8),
+          opacity: 0.6 + (t.count / maxCount) * 0.35
+        })
+      })
+    }
+
+    const dynastiesData: any[] = dynRes || []
+    if (dynastiesData.length) {
+      dynasties.value = []
+      dynastiesData.forEach((d: any) => {
+        dynasties.value.push({ name: d.name, count: d.count, pct: d.pct })
+      })
+    }
+  } catch {
+    // API 失败时保留 mock 数据
+  } finally {
     loading.value = false
-  }, 400)
+  }
 })
 </script>
 

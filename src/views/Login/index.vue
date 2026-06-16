@@ -131,8 +131,10 @@ import { reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
+import { useUserStore } from '@/stores/user'
 
 const router = useRouter()
+const userStore = useUserStore()
 const formRef = ref<FormInstance>()
 
 const form = reactive({
@@ -167,15 +169,9 @@ const handleLogin = async () => {
     submitting.value = true
 
     try {
-      await new Promise((r) => setTimeout(r, 800))
-
-      if (form.username && form.password) {
-        localStorage.setItem('token', 'mock-' + Date.now())
-        ElMessage.success('登录成功')
-        router.push('/home')
-      } else {
-        ElMessage.error('请填写完整')
-      }
+      await userStore.login(form.username, form.password)
+      ElMessage.success('登录成功')
+      router.push('/home')
     } catch (e: any) {
       ElMessage.error(e.message || '登录失败')
     } finally {
