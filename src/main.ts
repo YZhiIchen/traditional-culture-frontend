@@ -26,7 +26,7 @@ app.mount('#app')
 // ✅ 修复：移除导致问题的 beforeUnloadListener
 // 这个函数会持续修改 history.state，导致窗口无法最小化
 const originalReplaceState = window.history.replaceState
-window.history.replaceState = function(...args) {
+window.history.replaceState = function(...args: any[]) {
   // 过滤掉 beforeUnloadListener 触发的调用
   const stack = new Error().stack
   if (stack && stack.includes('beforeUnloadListener')) {
