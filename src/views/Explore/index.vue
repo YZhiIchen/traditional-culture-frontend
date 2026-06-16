@@ -362,7 +362,7 @@ onMounted(async () => {
           desc: r.desc,
           dynasty: r.dynasty,
           author: r.author,
-          category: r.category || categoryList[allFeatured.length % 5],
+          category: r.category || categoryList[allFeatured.value.length % 5],
           bg: 'linear-gradient(135deg, oklch(85% 0.02 55 / 0.3), oklch(75% 0.03 40 / 0.2))',
           accent: 'var(--cinnabar)',
           visual: '<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>'

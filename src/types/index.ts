@@ -10,6 +10,7 @@ export interface UserInfo {
   username: string
   nickname: string
   avatar?: string
+  role: string
 }
 
 // 上传相关
