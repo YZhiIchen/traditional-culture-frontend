@@ -1,13 +1,12 @@
 <template>
   <div class="detail">
-    <!-- 页面标识 -->
+    <!-- 页面标识 + 返回按钮（全局左上角） -->
     <div class="page-lead animate-fade-in-up">
       <div class="lead-badge">
         <span class="badge-line" />
         <span class="badge-text">识别 · 详情</span>
         <span class="badge-line" />
       </div>
-
       <div class="lead-row">
         <div>
           <h1 class="lead-title">识别结果详情</h1>
@@ -16,6 +15,16 @@
           </p>
         </div>
         <div class="lead-actions">
+          <!-- 返回按钮移至顶部操作栏 -->
+          <button class="ghost-btn back-top-btn" @click="goBack">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                 stroke-linejoin="round">
+              <line x1="19" y1="12" x2="5" y2="12" />
+              <polyline points="12 19 5 12 12 5" />
+            </svg>
+            返回
+          </button>
           <button class="ghost-btn" @click="exportResult">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
                  stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
@@ -39,17 +48,16 @@
         </div>
       </div>
     </div>
-
     <!-- 加载占位 -->
     <div v-if="loading" class="skeleton-area animate-fade-in">
       <div class="skeleton-block" style="height: 320px" />
       <div class="skeleton-block" style="height: 420px; margin-top: 16px;" />
     </div>
-
     <!-- 主内容（非对称双栏） -->
     <div v-else-if="data" class="detail-grid">
-      <!-- ═══ 左侧：原文件 ═══ -->
+      <!-- ═══ 左侧：原文件 + 标签分布图表 ═══ -->
       <div class="grid-primary animate-fade-in-up delay-1">
+        <!-- 1.原文件卡片 -->
         <section class="section-card">
           <div class="section-head">
             <span class="section-head-icon">
@@ -63,23 +71,21 @@
             </span>
             <span>原文件</span>
           </div>
-
           <div class="section-body">
-            <!-- 图片预览 -->
+            <!-- 图片预览 修复预览拉伸问题 -->
             <div v-if="data.fileType === 'image'" class="image-preview">
               <div class="image-frame">
                 <img
                   :src="data.fileUrl || placeholderImg"
                   alt="预览"
+                  loading="lazy"
                 />
               </div>
             </div>
-
-            <!-- 文本预览 -->
+            <!-- 文本预览 修复滚动留白 -->
             <div v-else class="text-preview">
-              <div class="text-scroll">{{ data.rawData?.content || '(无原始文本)' }}</div>
+              <div class="text-scroll">{{ data.rawData?.content?.trim() || '(无原始文本)' }}</div>
             </div>
-
             <!-- 文件元信息 -->
             <div class="file-meta">
               <div class="meta-row">
@@ -100,19 +106,26 @@
           </div>
         </section>
 
-        <!-- 返回按钮 -->
-        <button class="back-btn" @click="goBack">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
-               stroke="currentColor" stroke-width="2" stroke-linecap="round"
-               stroke-linejoin="round">
-            <line x1="19" y1="12" x2="5" y2="12" />
-            <polyline points="12 19 5 12 12 5" />
-          </svg>
-          返回
-        </button>
+        <!-- 2.标签分布图表 移至左侧原文件下方 -->
+        <section class="section-card chart-card animate-fade-in-up delay-2">
+          <div class="section-head">
+            <span class="section-head-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                   stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
+                   stroke-linejoin="round">
+                <line x1="18" y1="20" x2="18" y2="10" />
+                <line x1="12" y1="20" x2="12" y2="4" />
+                <line x1="6" y1="20" x2="6" y2="14" />
+              </svg>
+            </span>
+            <span>标签分布</span>
+          </div>
+          <div class="section-body">
+            <div ref="chartRef" class="chart" />
+          </div>
+        </section>
       </div>
-
-      <!-- ═══ 右侧：结构化数据 ═══ -->
+      <!-- ═══ 右侧：结构化数据 + 相似资源 ═══ -->
       <div class="grid-secondary animate-fade-in-up delay-2">
         <section class="section-card">
           <div class="section-head">
@@ -126,7 +139,6 @@
             </span>
             <span>结构化识别结果</span>
           </div>
-
           <div class="section-body">
             <!-- 基本信息 -->
             <div class="info-grid">
@@ -152,7 +164,6 @@
                 </span>
               </div>
             </div>
-
             <!-- 标签 -->
             <div class="tags-row">
               <span class="tags-label">标签</span>
@@ -165,13 +176,11 @@
                 <span v-if="!data.result?.tags?.length" class="no-tags">暂无</span>
               </div>
             </div>
-
             <!-- 描述 -->
             <div class="desc-block">
               <span class="desc-label">作品描述</span>
               <p class="desc-text">{{ data.result?.description || '暂无描述' }}</p>
             </div>
-
             <!-- 完整内容 -->
             <div v-if="data.result?.content" class="content-block">
               <span class="content-label">完整内容</span>
@@ -179,26 +188,6 @@
             </div>
           </div>
         </section>
-
-        <!-- 统计图表 -->
-        <section class="section-card chart-card animate-fade-in-up delay-3">
-          <div class="section-head">
-            <span class="section-head-icon">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
-                   stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
-                   stroke-linejoin="round">
-                <line x1="18" y1="20" x2="18" y2="10" />
-                <line x1="12" y1="20" x2="12" y2="4" />
-                <line x1="6" y1="20" x2="6" y2="14" />
-              </svg>
-            </span>
-            <span>标签分布</span>
-          </div>
-          <div class="section-body">
-            <div ref="chartRef" class="chart" />
-          </div>
-        </section>
-
         <!-- 相似资源 -->
         <section class="section-card animate-fade-in-up delay-3">
           <div class="section-head">
@@ -226,60 +215,53 @@
         </section>
       </div>
     </div>
-
     <!-- 无数据 -->
     <div v-else class="detail-empty animate-fade-in">
       <p>未找到识别结果</p>
     </div>
   </div>
 </template>
-
 <script setup lang="ts">
-import { ref, computed, onMounted, nextTick } from 'vue'
+import { ref, computed, onMounted, nextTick, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import * as echarts from 'echarts'
 import type { RecognitionResult } from '@/types'
 import { getRecognitionResultApi } from '@/api/recognition'
-
 const route = useRoute()
 const router = useRouter()
-
 const loading = ref(false)
 const data = ref<RecognitionResult | null>(null)
 const chartRef = ref<HTMLDivElement>()
-
 const placeholderImg = 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22300%22 fill=%22%23f0f0f5%22%3E%3Crect width=%22400%22 height=%22300%22 rx=%228%22/%3E%3Ctext x=%22200%22 y=%22150%22 text-anchor=%22middle%22 fill=%22%23a0a0b8%22 font-size=%2214%22%3E图片预览%3C/text%3E%3C/svg%3E'
-
 const confidencePct = computed(() => {
   const c = data.value?.result?.confidence || 0
   return Math.round(c * 100)
 })
-
-// 模拟统计数据
-const chartData = [
-  { name: '山水', value: 85 },
-  { name: '人物', value: 60 },
-  { name: '花鸟', value: 45 },
-  { name: '书法', value: 30 }
-]
-
+// 动态生成图表数据：根据后端返回tags生成，每个标签权重固定10
+const chartData = computed(() => {
+  const tags = data.value?.result?.tags || []
+  return tags.map(tag => ({
+    name: tag,
+    value: 10
+  }))
+})
 const getChartColors = () => {
   const s = getComputedStyle(document.documentElement)
   return [
     s.getPropertyValue('--cinnabar').trim() || '#c23b22',
     s.getPropertyValue('--gold').trim() || '#c9a96e',
     s.getPropertyValue('--celadon').trim() || '#7aab8c',
-    s.getPropertyValue('--azure').trim() || '#5b7fa5'
+    s.getPropertyValue('--azure').trim() || '#5b7fa5',
+    '#9168b8', '#489cc2', '#d4886a'
   ]
 }
-
+// 初始化图表
 const initChart = () => {
-  if (!chartRef.value) return
-
+  if (!chartRef.value || !data.value) return
   const chart = echarts.init(chartRef.value)
   const colors = getChartColors()
-
+  const dataList = chartData.value
   chart.setOption({
     tooltip: {
       trigger: 'item',
@@ -300,7 +282,7 @@ const initChart = () => {
       },
       label: {
         show: true,
-        formatter: '{b}\n{d}%',
+        formatter: '{b}',
         fontSize: 11,
         color: 'var(--text-secondary)',
         lineHeight: 16
@@ -309,34 +291,38 @@ const initChart = () => {
         label: { fontSize: 13, fontWeight: 'bold' },
         itemStyle: { shadowBlur: 10, shadowColor: 'rgba(0,0,0,0.1)' }
       },
-      data: chartData.map((item, i) => ({
+      data: dataList.map((item, i) => ({
         ...item,
-        itemStyle: { color: colors[i] }
+        itemStyle: { color: colors[i % colors.length] }
       }))
     }]
   })
+  // 窗口自适应
+  window.addEventListener('resize', () => chart.resize())
 }
-
+// 监听数据变化，数据加载完成后渲染图表
+watch(data, async (newVal) => {
+  if (newVal) {
+    await nextTick()
+    initChart()
+  }
+}, { immediate: true })
 const fetchData = async () => {
   const id = route.params.id as string
   if (!id) {
     ElMessage.error('参数错误')
     return
   }
-
   loading.value = true
   try {
     const res = await getRecognitionResultApi(id)
     data.value = res as unknown as RecognitionResult
-    await nextTick()
-    initChart()
-  } catch {
-    ElMessage.error('获取识别结果失败')
+  } catch (err: any) {
+    ElMessage.error(err?.message || '获取识别结果失败，千问AI识别异常')
   } finally {
     loading.value = false
   }
 }
-
 const exportResult = () => {
   if (!data.value) return
   const blob = new Blob([JSON.stringify(data.value, null, 2)], { type: 'application/json' })
@@ -348,10 +334,8 @@ const exportResult = () => {
   URL.revokeObjectURL(url)
   ElMessage.success('已导出')
 }
-
 const printPage = () => window.print()
 const goBack = () => router.back()
-
 const goSearch = () => {
   const title = data.value?.result?.title
   if (title) {
@@ -360,33 +344,27 @@ const goSearch = () => {
     router.push('/search')
   }
 }
-
 onMounted(() => fetchData())
 </script>
-
 <style scoped lang="scss">
 // ═══════════════════════════════════════════
 // 当代山水 · 识别详情
 // ═══════════════════════════════════════════
-
 .detail {
   // ── 页面引导 ──
   .page-lead {
     margin-bottom: var(--space-xl);
-
     .lead-badge {
       display: flex;
       align-items: center;
       gap: 8px;
       margin-bottom: 8px;
-
       .badge-line {
         width: 20px;
         height: 1px;
         background: var(--cinnabar);
         opacity: 0.3;
       }
-
       .badge-text {
         font-size: 11px;
         color: var(--cinnabar);
@@ -395,7 +373,6 @@ onMounted(() => fetchData())
         opacity: 0.7;
       }
     }
-
     .lead-row {
       display: flex;
       justify-content: space-between;
@@ -403,7 +380,6 @@ onMounted(() => fetchData())
       gap: var(--space-md);
       flex-wrap: wrap;
     }
-
     .lead-title {
       font-family: var(--font-heading);
       font-size: clamp(22px, 3vw, 28px);
@@ -411,20 +387,17 @@ onMounted(() => fetchData())
       color: var(--text-primary);
       letter-spacing: 4px;
     }
-
     .lead-desc {
       margin-top: 6px;
       font-size: 13px;
       color: var(--text-secondary);
     }
-
     .lead-actions {
       display: flex;
       gap: 8px;
       flex-shrink: 0;
     }
   }
-
   .ghost-btn {
     all: unset;
     display: inline-flex;
@@ -438,14 +411,15 @@ onMounted(() => fetchData())
     cursor: pointer;
     transition: all var(--transition-fast);
     border: 1px solid var(--border-color);
-
     &:hover {
       color: var(--text-regular);
       border-color: var(--ink-400);
       background: oklch(50% 0.16 28 / 0.03);
     }
+    &.back-top-btn {
+      color: var(--cinnabar);
+    }
   }
-
   // ── 骨架 ──
   .skeleton-area {
     .skeleton-block {
@@ -462,24 +436,20 @@ onMounted(() => fetchData())
       background-size: 200% 100%;
     }
   }
-
   @keyframes shimmer {
     0% { background-position: -200% 0; }
     100% { background-position: 200% 0; }
   }
-
   // ── 网格 ──
   .detail-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: var(--space-lg);
     align-items: start;
-
     @media (max-width: 900px) {
       grid-template-columns: 1fr;
     }
   }
-
   // ── 区块卡片 ──
   .section-card {
     background: var(--bg-card);
@@ -489,7 +459,6 @@ onMounted(() => fetchData())
     box-shadow: var(--shadow-sm);
     transition: box-shadow var(--transition-normal);
     margin-bottom: var(--space-lg);
-
     .section-head {
       display: flex;
       align-items: center;
@@ -501,45 +470,38 @@ onMounted(() => fetchData())
       border-bottom: 1px solid var(--border-color);
       background: oklch(99% 0.002 55);
       letter-spacing: 1px;
-
       [data-theme='dark'] & {
         background: oklch(14% 0.003 55);
       }
-
       .section-head-icon {
         display: inline-flex;
         color: var(--cinnabar);
       }
     }
-
     .section-body {
       padding: var(--space-lg);
     }
   }
-
   // ── 左栏 ──
   .grid-primary {
     .image-preview {
       margin-bottom: var(--space-md);
-
       .image-frame {
         background: var(--bg-body);
         border-radius: var(--radius-md);
         overflow: hidden;
         border: 1px solid var(--border-light);
-
         img {
           width: 100%;
           max-height: 360px;
           object-fit: contain;
           display: block;
+          background: #fff;
         }
       }
     }
-
     .text-preview {
       margin-bottom: var(--space-md);
-
       .text-scroll {
         max-height: 300px;
         overflow-y: auto;
@@ -553,7 +515,6 @@ onMounted(() => fetchData())
         border: 1px solid var(--border-light);
       }
     }
-
     .file-meta {
       .meta-row {
         display: flex;
@@ -561,19 +522,15 @@ onMounted(() => fetchData())
         align-items: center;
         padding: 8px 0;
         font-size: 13px;
-
         &:not(:last-child) {
           border-bottom: 1px solid var(--border-light);
         }
-
         .meta-key {
           color: var(--text-secondary);
         }
-
         .meta-val {
           color: var(--text-primary);
           font-weight: 500;
-
           &.type-badge {
             font-size: 11px;
             padding: 1px 10px;
@@ -584,24 +541,7 @@ onMounted(() => fetchData())
         }
       }
     }
-
-    .back-btn {
-      all: unset;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 13px;
-      color: var(--text-secondary);
-      cursor: pointer;
-      transition: all var(--transition-fast);
-      padding: 4px 0;
-
-      &:hover {
-        color: var(--cinnabar);
-      }
-    }
   }
-
   // ── 右栏 ──
   .grid-secondary {
     .info-grid {
@@ -609,20 +549,16 @@ onMounted(() => fetchData())
       grid-template-columns: 1fr 1fr;
       gap: 0;
       margin-bottom: var(--space-md);
-
       .info-cell {
         padding: 10px 0;
         border-bottom: 1px solid var(--border-light);
-
         &:nth-child(odd) {
           padding-right: 12px;
         }
-
         &:nth-child(even) {
           padding-left: 12px;
           border-left: 1px solid var(--border-light);
         }
-
         .info-cell-label {
           display: block;
           font-size: 11px;
@@ -630,18 +566,15 @@ onMounted(() => fetchData())
           margin-bottom: 4px;
           letter-spacing: 0.5px;
         }
-
         .info-cell-value {
           font-size: 14px;
           color: var(--text-primary);
           font-weight: 500;
-
           &.title-value {
             font-family: var(--font-heading);
             font-size: 16px;
             font-weight: 700;
           }
-
           &.dynasty-badge {
             display: inline-block;
             font-size: 12px;
@@ -652,7 +585,6 @@ onMounted(() => fetchData())
             font-weight: 600;
           }
         }
-
         .confidence-bar {
           display: inline-block;
           width: 80px;
@@ -662,7 +594,6 @@ onMounted(() => fetchData())
           overflow: hidden;
           vertical-align: middle;
           margin-right: 6px;
-
           .confidence-fill {
             display: block;
             height: 100%;
@@ -671,7 +602,6 @@ onMounted(() => fetchData())
             transition: width 0.8s var(--ease-out-expo);
           }
         }
-
         .confidence-num {
           font-size: 12px;
           color: var(--cinnabar);
@@ -679,26 +609,22 @@ onMounted(() => fetchData())
         }
       }
     }
-
     .tags-row {
       display: flex;
       gap: 10px;
       margin-bottom: var(--space-md);
       padding-bottom: var(--space-md);
       border-bottom: 1px solid var(--border-light);
-
       .tags-label {
         font-size: 12px;
         color: var(--text-tertiary);
         flex-shrink: 0;
         padding-top: 2px;
       }
-
       .tags-list {
         display: flex;
         flex-wrap: wrap;
         gap: 6px;
-
         .tag {
           font-size: 11px;
           padding: 2px 12px;
@@ -707,31 +633,26 @@ onMounted(() => fetchData())
           color: var(--cinnabar);
           letter-spacing: 0.5px;
         }
-
         .no-tags {
           font-size: 12px;
           color: var(--text-tertiary);
         }
       }
     }
-
     .desc-block {
       margin-bottom: var(--space-md);
-
       .desc-label {
         display: block;
         font-size: 12px;
         color: var(--text-tertiary);
         margin-bottom: 6px;
       }
-
       .desc-text {
         font-size: 13px;
         color: var(--text-secondary);
         line-height: 1.8;
       }
     }
-
     .content-block {
       .content-label {
         display: block;
@@ -739,7 +660,6 @@ onMounted(() => fetchData())
         color: var(--text-tertiary);
         margin-bottom: 6px;
       }
-
       .content-text {
         font-size: 14px;
         color: var(--text-regular);
@@ -754,7 +674,6 @@ onMounted(() => fetchData())
       }
     }
   }
-
   // ── 图表 ──
   .chart-card {
     .chart {
@@ -762,7 +681,6 @@ onMounted(() => fetchData())
       width: 100%;
     }
   }
-
   // ── 相似 ──
   .similar-btn {
     all: unset;
@@ -778,13 +696,11 @@ onMounted(() => fetchData())
     border-radius: var(--radius-md);
     cursor: pointer;
     transition: all var(--transition-fast);
-
     &:hover {
       transform: translateY(-1px);
       box-shadow: 0 4px 12px oklch(50% 0.16 28 / 0.25);
     }
   }
-
   // ── 空 ──
   .detail-empty {
     text-align: center;
@@ -793,18 +709,15 @@ onMounted(() => fetchData())
     color: var(--text-secondary);
   }
 }
-
 // ── 动画 ──
 @keyframes fadeInUp {
   from { opacity: 0; transform: translateY(12px); }
   to { opacity: 1; transform: translateY(0); }
 }
-
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
 }
-
 @keyframes fadeInScale {
   from { opacity: 0; transform: scale(0.95); }
   to { opacity: 1; transform: scale(1); }

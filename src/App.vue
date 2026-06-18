@@ -4,6 +4,7 @@
       <component :is="Component" :key="r.path" />
     </transition>
   </router-view>
+  <AIChat />
 </template>
 
 <script setup lang="ts">
@@ -13,6 +14,8 @@ import { useAppStore } from '@/stores/app'
 import { storeToRefs } from 'pinia'
 
 const route = useRoute()
+import AIChat from '@/components/AIChat.vue'
+
 const appStore = useAppStore()
 const { theme, sidebarCollapsed } = storeToRefs(appStore)
 
