@@ -68,6 +68,7 @@
     <!-- 批量操作栏 -->
     <div v-if="selectedIds.length > 0" class="batch-bar animate-fade-in">
       <span class="batch-count">已选 {{ selectedIds.length }} 项</span>
+      <button class="batch-action-btn" @click="selectAll">全选</button>
       <button class="batch-delete-btn" @click="batchDelete">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
              stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
@@ -84,7 +85,7 @@
         批量收藏
       </button>
       <button class="batch-action-btn" @click="batchUnfavorite">取消收藏</button>
-      <button class="batch-cancel-btn" @click="selectedIds = []">取消选择</button>
+      <button class="batch-cancel-btn" @click="deselectAll">取消全选</button>
     </div>
 
     <!-- 列表 -->
@@ -293,6 +294,14 @@ const toggleSelect = (id: string) => {
   } else {
     selectedIds.value.splice(idx, 1)
   }
+}
+
+const selectAll = () => {
+  selectedIds.value = filteredList.value.map(i => i.id)
+}
+
+const deselectAll = () => {
+  selectedIds.value = []
 }
 
 const batchDelete = async () => {

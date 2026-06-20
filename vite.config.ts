@@ -17,6 +17,10 @@ export default defineConfig({
         changeOrigin: true,
         // 如果后端接口没有 /api 前缀，去掉 rewrite
         // rewrite: (path) => path.replace(/^\/api/, '')
+      },
+      '/uploads': {
+        target: 'http://localhost:8080',  // 后端静态资源（上传图片）
+        changeOrigin: true
       }
     }
   }
