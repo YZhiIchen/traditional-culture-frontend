@@ -40,16 +40,18 @@ server {
     root $SITE_DIR;
     index index.html;
 
+    client_max_body_size 12m;
+
     location /api/ {
-        proxy_pass $BACKEND_URL/;
+        proxy_pass $BACKEND_URL;
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto \$scheme;
     }
 
-        location /uploads/ {
-        proxy_pass $BACKEND_URL/uploads/;
+    location /uploads/ {
+        proxy_pass $BACKEND_URL;
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
