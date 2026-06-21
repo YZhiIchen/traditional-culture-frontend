@@ -17,6 +17,11 @@ export const logoutApi = () => {
   return request.post('/auth/logout')
 }
 
+// 恢复已注销账号
+export const reactivateApi = (data: LoginForm) => {
+  return request.post<{ token: string; userInfo: UserInfo }>('/user/reactivate', data)
+}
+
 // 获取用户信息
 export const getUserInfoApi = () => {
   return request.get<UserInfo>('/user/info')

@@ -78,11 +78,21 @@
             </span>
             <input
               v-model="form.password"
-              type="password"
+              :type="showPwd ? 'text' : 'password'"
               placeholder="密码"
               class="input-field"
-              autocomplete="current-password"
+              autocomplete="off"
             />
+            <span
+              class="pwd-toggle"
+              @mousedown.prevent="showPwd = true"
+              @mouseup="showPwd = false"
+              @mouseleave="showPwd = false"
+              title="按住查看密码"
+            >
+              <svg v-if="!showPwd" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              <svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+            </span>
           </div>
         </el-form-item>
 
@@ -129,9 +139,10 @@
 <script setup lang="ts">
 import { reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
 import { useUserStore } from '@/stores/user'
+import { loginApi, reactivateApi } from '@/api'
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -141,6 +152,8 @@ const form = reactive({
   username: '',
   password: ''
 })
+
+const showPwd = ref(false)
 
 const rules: FormRules = {
   username: [
@@ -169,7 +182,32 @@ const handleLogin = async () => {
     submitting.value = true
 
     try {
-      await userStore.login(form.username, form.password)
+      const res: any = await loginApi({ username: form.username, password: form.password })
+
+      // 账号已注销（30 天保留期内），询问是否恢复
+      if (res?.deleted) {
+        try {
+          await ElMessageBox.confirm(
+            '该帐号已注销，是否恢复？',
+            '账号恢复',
+            { confirmButtonText: '恢复', cancelButtonText: '取消', type: 'warning' }
+          )
+          const r: any = await reactivateApi({ username: form.username, password: form.password })
+          userStore.setToken(r.token)
+          userStore.userInfo = r.userInfo
+          ElMessage.success('账号已恢复，登录成功')
+          router.push('/home')
+        } catch {
+          ElMessage.info('已取消恢复')
+        } finally {
+          submitting.value = false
+        }
+        return
+      }
+
+      // 正常登录
+      userStore.setToken(res.token)
+      userStore.userInfo = res.userInfo
       ElMessage.success('登录成功')
       router.push('/home')
     } catch (e: any) {

@@ -16,18 +16,22 @@
       <!-- 左栏：用户头像 + 概览 -->
       <div class="profile-aside animate-fade-in-up delay-1">
         <div class="avatar-card">
+        <div class="avatar-box">
           <div class="avatar-wrap">
-            <span class="avatar-char">Y</span>
-            <button class="avatar-edit" title="更换头像">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
-                   stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                   stroke-linejoin="round">
-                <path d="M12 20h9" />
-                <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
-              </svg>
-            </button>
+            <img v-if="avatarUrl" :src="avatarDisplay" class="avatar-img" alt="头像" />
+            <span v-else class="avatar-char">{{ currentInitial }}</span>
           </div>
-          <h2 class="avatar-name">{{ localForm.nickname || 'YangZhi' }}</h2>
+          <button class="avatar-edit" title="更换头像" @click="triggerFileSelect">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                 stroke-linejoin="round">
+              <path d="M12 20h9" />
+              <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+            </svg>
+          </button>
+        </div>
+          <input ref="fileInput" type="file" accept="image/jpeg,image/png" hidden @change="handleAvatarChange" />
+          <h2 class="avatar-name">{{ localForm.nickname ? localForm.nickname : '昵称不能为空' }}</h2>
           <p class="avatar-role">@{{ localForm.username || 'yangzhi' }}</p>
 
           <div class="avatar-stats">
@@ -74,21 +78,6 @@
           </div>
 
           <div class="section-body">
-            <!-- 头像（带笔图标） -->
-            <div class="avatar-edit-wrap">
-              <div class="avatar-circle">
-                <img v-if="avatarUrl" :src="avatarUrl" class="avatar-img" alt="头像" />
-                <span v-else class="avatar-initial">{{ currentInitial }}</span>
-              </div>
-              <div class="avatar-edit-btn" @click="triggerFileSelect" title="修改头像">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-                  <path d="M12 20h9" />
-                  <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
-                </svg>
-              </div>
-              <input ref="fileInput" type="file" accept="image/jpeg,image/png" hidden @change="handleAvatarChange" />
-            </div>
-
             <el-form
               ref="formRef"
               :model="localForm"
@@ -147,19 +136,49 @@
             >
               <el-form-item label="当前密码" prop="current">
                 <div class="input-group">
-                  <input v-model="pwdForm.current" type="password" placeholder="输入当前密码" class="input-field" />
+                  <input v-model="pwdForm.current" :type="showPwd.current ? 'text' : 'password'" placeholder="输入当前密码" class="input-field" autocomplete="off" />
+                  <span
+                    class="pwd-toggle"
+                    @mousedown.prevent="showPwd.current = true"
+                    @mouseup="showPwd.current = false"
+                    @mouseleave="showPwd.current = false"
+                    title="按住查看密码"
+                  >
+                    <svg v-if="!showPwd.current" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                    <svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                  </span>
                 </div>
               </el-form-item>
 
               <el-form-item label="新密码" prop="newPwd">
                 <div class="input-group">
-                  <input v-model="pwdForm.newPwd" type="password" placeholder="6-20 位字符" class="input-field" />
+                  <input v-model="pwdForm.newPwd" :type="showPwd.newPwd ? 'text' : 'password'" placeholder="6-20 位字符" class="input-field" autocomplete="off" />
+                  <span
+                    class="pwd-toggle"
+                    @mousedown.prevent="showPwd.newPwd = true"
+                    @mouseup="showPwd.newPwd = false"
+                    @mouseleave="showPwd.newPwd = false"
+                    title="按住查看密码"
+                  >
+                    <svg v-if="!showPwd.newPwd" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                    <svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                  </span>
                 </div>
               </el-form-item>
 
               <el-form-item label="确认新密码" prop="confirm">
                 <div class="input-group">
-                  <input v-model="pwdForm.confirm" type="password" placeholder="再次输入新密码" class="input-field" />
+                  <input v-model="pwdForm.confirm" :type="showPwd.confirm ? 'text' : 'password'" placeholder="再次输入新密码" class="input-field" autocomplete="off" />
+                  <span
+                    class="pwd-toggle"
+                    @mousedown.prevent="showPwd.confirm = true"
+                    @mouseup="showPwd.confirm = false"
+                    @mouseleave="showPwd.confirm = false"
+                    title="按住查看密码"
+                  >
+                    <svg v-if="!showPwd.confirm" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                    <svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                  </span>
                 </div>
               </el-form-item>
             </el-form>
@@ -214,6 +233,34 @@
         </div>
       </div>
     </div>
+
+    <!-- 头像裁剪弹窗 -->
+    <div v-if="cropVisible" class="crop-mask" @click.self="!moved && closeCrop()">
+      <div class="crop-dialog">
+        <h3 class="crop-title">裁剪头像</h3>
+        <p class="crop-tip">拖动调整位置，滚轮缩放（0.9~1.2）</p>
+        <div
+          class="crop-stage"
+          ref="cropStageRef"
+          @mousedown="startDrag"
+          @wheel.prevent="onWheel"
+        >
+          <img
+            ref="cropImgRef"
+            :src="rawImage"
+            class="crop-img"
+            :style="{ left: imgPos.x + 'px', top: imgPos.y + 'px', width: rawImgSize.w * imgScale + 'px', height: rawImgSize.h * imgScale + 'px' }"
+            draggable="false"
+          />
+          <div class="crop-frame"></div>
+        </div>
+        <p class="crop-scale-tip">缩放：{{ Math.round(imgScale * 100) }}%</p>
+        <div class="crop-actions">
+          <button class="crop-btn cancel" @click="closeCrop">取消</button>
+          <button class="crop-btn confirm" @click="confirmCrop">确认裁剪</button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -249,30 +296,177 @@ const favoriteCount = ref('0')
 
 // 头像
 const avatarUrl = ref('')
+const avatarVersion = ref(0)
+const avatarDisplay = computed(() => {
+  if (!avatarUrl.value) return ''
+  const sep = avatarUrl.value.includes('?') ? '&' : '?'
+  return avatarVersion.value ? `${avatarUrl.value}${sep}v=${avatarVersion.value}` : avatarUrl.value
+})
 const fileInput = ref<HTMLInputElement>()
 const currentInitial = computed(() => localForm.nickname?.[0]?.toUpperCase() || 'U')
 
+// 裁剪相关
+const cropVisible = ref(false)
+const rawImage = ref('')
+const cropStageRef = ref<HTMLElement>()
+const cropImgRef = ref<HTMLImageElement>()
+const imgPos = reactive({ x: 0, y: 0 })
+const imgScale = ref(1)
+const dragging = ref(false)
+const moved = ref(false)
+const dragStart = reactive({ x: 0, y: 0, ox: 0, oy: 0 })
+const rawImgSize = reactive({ w: 0, h: 0 })
+const CROP_SIZE = 256
+const MIN_SCALE = 0.9
+const MAX_SCALE = 1.2
+const MAX_AVATAR_DIM = 500
+
 const triggerFileSelect = () => {
   fileInput.value?.click()
+}
+
+// 限制拖动范围
+const clampImgPos = () => {
+  const scaledW = rawImgSize.w * imgScale.value
+  const scaledH = rawImgSize.h * imgScale.value
+  if (imgPos.x > 0) imgPos.x = 0
+  if (imgPos.x < CROP_SIZE - scaledW) imgPos.x = CROP_SIZE - scaledW
+  if (imgPos.y > 0) imgPos.y = 0
+  if (imgPos.y < CROP_SIZE - scaledH) imgPos.y = CROP_SIZE - scaledH
 }
 
 const handleAvatarChange = async (e: Event) => {
   const input = e.target as HTMLInputElement
   const file = input.files?.[0]
   if (!file) return
+  input.value = ''
 
-  // 预览
+  // 先校验尺寸 ≤500×500
+  const img = new Image()
+  const url = URL.createObjectURL(file)
+  img.src = url
+  await new Promise((r) => { img.onload = r; img.onerror = r })
+  URL.revokeObjectURL(url)
+
+  if (img.width > MAX_AVATAR_DIM || img.height > MAX_AVATAR_DIM) {
+    ElMessage.error(`图片尺寸不能超过 ${MAX_AVATAR_DIM}×${MAX_AVATAR_DIM}，当前 ${img.width}×${img.height}`)
+    return
+  }
+
   const reader = new FileReader()
-  reader.onload = (ev) => { avatarUrl.value = ev.target?.result as string }
+  reader.onload = (ev) => {
+    rawImage.value = ev.target?.result as string
+    const img2 = new Image()
+    img2.onload = () => {
+      // 缩放到适合预览的尺寸（最长边 256）
+      const scale = Math.min(1, CROP_SIZE / Math.max(img2.width, img2.height))
+      rawImgSize.w = img2.width * scale
+      rawImgSize.h = img2.height * scale
+      imgScale.value = 1
+      // 居中
+      imgPos.x = (CROP_SIZE - rawImgSize.w) / 2
+      imgPos.y = (CROP_SIZE - rawImgSize.h) / 2
+      clampImgPos()
+      cropVisible.value = true
+    }
+    img2.src = rawImage.value
+  }
   reader.readAsDataURL(file)
+}
 
-  // 上传
+const onWheel = (e: WheelEvent) => {
+  e.preventDefault()
+  const delta = e.deltaY > 0 ? -0.05 : 0.05
+  let next = imgScale.value + delta
+  if (next < MIN_SCALE) next = MIN_SCALE
+  if (next > MAX_SCALE) next = MAX_SCALE
+  imgScale.value = next
+  clampImgPos()
+}
+
+const startDrag = (e: MouseEvent) => {
+  dragging.value = true
+  moved.value = false
+  dragStart.x = e.clientX
+  dragStart.y = e.clientY
+  dragStart.ox = imgPos.x
+  dragStart.oy = imgPos.y
+  const move = (ev: MouseEvent) => {
+    if (!dragging.value) return
+    if (Math.abs(ev.clientX - dragStart.x) > 3 || Math.abs(ev.clientY - dragStart.y) > 3) {
+      moved.value = true
+    }
+    imgPos.x = dragStart.ox + (ev.clientX - dragStart.x)
+    imgPos.y = dragStart.oy + (ev.clientY - dragStart.y)
+    clampImgPos()
+  }
+  const up = () => {
+    dragging.value = false
+    document.removeEventListener('mousemove', move)
+    document.removeEventListener('mouseup', up)
+    if (moved.value) {
+      setTimeout(() => { moved.value = false }, 100)
+    }
+  }
+  document.addEventListener('mousemove', move)
+  document.addEventListener('mouseup', up)
+}
+
+const closeCrop = () => {
+  cropVisible.value = false
+  rawImage.value = ''
+}
+
+const confirmCrop = async () => {
+  const realImg = new Image()
+  realImg.src = rawImage.value
+  await new Promise((r) => { realImg.onload = r; realImg.onerror = r })
+
+  // 图片在 stage 显示尺寸
+  const dispW = rawImgSize.w * imgScale.value
+  const dispH = rawImgSize.h * imgScale.value
+  // stage 坐标转原图坐标的比例
+  const ratioX = realImg.width / dispW
+  const ratioY = realImg.height / dispH
+  // 裁剪框(0,0,CROP_SIZE,CROP_SIZE) 在原图上的区域
+  let sx = -imgPos.x * ratioX
+  let sy = -imgPos.y * ratioY
+  let sw = CROP_SIZE * ratioX
+  let sh = CROP_SIZE * ratioY
+  // 边界保护
+  if (sx < 0) { sw += sx; sx = 0 }
+  if (sy < 0) { sh += sy; sy = 0 }
+  if (sx + sw > realImg.width) sw = realImg.width - sx
+  if (sy + sh > realImg.height) sh = realImg.height - sy
+  if (sw <= 0 || sh <= 0) {
+    ElMessage.error('裁剪区域无效')
+    return
+  }
+
+  const canvas = document.createElement('canvas')
+  canvas.width = CROP_SIZE
+  canvas.height = CROP_SIZE
+  const ctx = canvas.getContext('2d')!
+  ctx.beginPath()
+  ctx.arc(CROP_SIZE / 2, CROP_SIZE / 2, CROP_SIZE / 2, 0, Math.PI * 2)
+  ctx.closePath()
+  ctx.clip()
+  ctx.drawImage(realImg, sx, sy, sw, sh, 0, 0, CROP_SIZE, CROP_SIZE)
+  cropVisible.value = false
+
+  const blob: Blob = await new Promise((resolve) => {
+    canvas.toBlob((b) => resolve(b!), 'image/png')
+  })
+  const file = new File([blob], 'avatar.png', { type: 'image/png' })
   try {
     const res: any = await request.upload('/user/avatar', file)
-    if (res?.avatar) avatarUrl.value = res.avatar
+    if (res?.avatar) {
+      avatarUrl.value = res.avatar
+      avatarVersion.value = Date.now()
+    }
     ElMessage.success('头像已更新')
-  } catch (e: any) {
-    ElMessage.error(e.message || '头像上传失败')
+  } catch (err: any) {
+    ElMessage.error(err.message || '头像上传失败')
   }
 }
 
@@ -285,6 +479,12 @@ const pwdForm = reactive({
   current: '',
   newPwd: '',
   confirm: ''
+})
+
+const showPwd = reactive({
+  current: false,
+  newPwd: false,
+  confirm: false
 })
 
 const validateNew = (_rule: any, value: string, callback: any) => {
@@ -351,10 +551,15 @@ const changePassword = async () => {
       current: pwdForm.current,
       newPwd: pwdForm.newPwd
     })
-    ElMessage.success('密码已修改')
+    ElMessage.success('密码已修改，请重新登录')
     pwdForm.current = ''
     pwdForm.newPwd = ''
     pwdForm.confirm = ''
+    // 修改密码后自动登出，回到登录页
+    localStorage.removeItem('token')
+    userStore.token = ''
+    userStore.userInfo = null
+    setTimeout(() => router.push('/login'), 800)
   } catch (e: any) {
     ElMessage.error(e.message || '密码修改失败')
   } finally {
@@ -362,15 +567,25 @@ const changePassword = async () => {
   }
 }
 
-// 加载用户数据
-onMounted(async () => {
+const loadUserInfo = async () => {
   try {
     const info = await getUserInfoApi()
     localForm.nickname = (info as any).nickname || ''
     localForm.username = (info as any).username || ''
     localForm.email = (info as any).email || ''
     localForm.bio = (info as any).bio || ''
+    avatarUrl.value = (info as any).avatar || ''
+    if (avatarUrl.value) avatarVersion.value = Date.now()
+  } catch {
+    // 静默
+  }
+}
 
+// 加载用户数据
+onMounted(async () => {
+  await loadUserInfo()
+
+  try {
     // 加载统计
     const stats: any = await request.get('/dashboard/stats')
     uploadCount.value = String(stats.totalResources || 0)
@@ -383,8 +598,15 @@ onMounted(async () => {
   }
 })
 
-const resetProfile = () => {
-  ElMessage.info('已重置')
+const resetProfile = async () => {
+  // 恢复到未保存状态：重新拉取后端信息 + 清空密码输入
+  await loadUserInfo()
+  pwdForm.current = ''
+  pwdForm.newPwd = ''
+  pwdForm.confirm = ''
+  formRef.value?.clearValidate()
+  pwdFormRef.value?.clearValidate()
+  ElMessage.info('取消')
 }
 
 const handleLogout = async () => {
@@ -486,7 +708,18 @@ const handleDeleteAccount = async () => {
       .avatar-wrap {
         position: relative;
         display: inline-block;
+        width: 80px;
+        height: 80px;
         margin-bottom: 12px;
+        border-radius: 50%;
+        overflow: hidden;
+
+        .avatar-img {
+          display: block;
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+        }
 
         .avatar-char {
           display: flex;
@@ -507,22 +740,21 @@ const handleDeleteAccount = async () => {
           position: absolute;
           bottom: 2px;
           right: 2px;
-          width: 30px;
-          height: 30px;
+          width: 26px;
+          height: 26px;
           border-radius: 50%;
-          background: var(--bg-card-solid);
-          border: 1.5px solid var(--border-color);
+          background: rgba(0, 0, 0, 0.45);
+          border: none;
           display: flex;
           align-items: center;
           justify-content: center;
           cursor: pointer;
-          color: var(--text-secondary);
+          color: #fff;
           transition: all var(--transition-fast);
-          box-shadow: var(--shadow-sm);
+          backdrop-filter: blur(2px);
 
           &:hover {
-            color: var(--cinnabar);
-            border-color: var(--cinnabar);
+            background: rgba(0, 0, 0, 0.65);
           }
         }
       }
@@ -819,5 +1051,93 @@ const handleDeleteAccount = async () => {
 @keyframes fadeInUp {
   from { opacity: 0; transform: translateY(12px); }
   to { opacity: 1; transform: translateY(0); }
+}
+
+// 头像裁剪弹窗
+.crop-mask {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+.crop-dialog {
+  background: var(--bg-card, #fff);
+  border-radius: 16px;
+  padding: 24px;
+  width: 360px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+.crop-title {
+  margin: 0 0 4px;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-primary, #1a1a1a);
+}
+.crop-tip {
+  margin: 0 0 16px;
+  font-size: 13px;
+  color: var(--text-secondary, #888);
+}
+.crop-stage {
+  position: relative;
+  width: 256px;
+  height: 256px;
+  margin: 0 auto 12px;
+  overflow: hidden;
+  background: #000;
+  cursor: move;
+  border-radius: 50%;
+}
+.crop-img {
+  position: absolute;
+  user-select: none;
+  pointer-events: none;
+  max-width: none;
+  transition: transform 0.05s ease-out;
+}
+.crop-frame {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 256px;
+  height: 256px;
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  border-radius: 50%;
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.45);
+  pointer-events: none;
+}
+.crop-scale-tip {
+  margin: 0 0 12px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--text-secondary, #888);
+}
+.crop-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+.crop-btn {
+  padding: 8px 20px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+.crop-btn.cancel {
+  background: #f0f0f0;
+  color: #666;
+}
+.crop-btn.confirm {
+  background: #3b82f6;
+  color: #fff;
+}
+.crop-btn.confirm:hover {
+  background: #2563eb;
 }
 </style>

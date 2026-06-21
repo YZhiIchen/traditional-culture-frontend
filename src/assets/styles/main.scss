@@ -333,3 +333,31 @@ body::after {
   background: var(--bg-card) !important;
   box-shadow: var(--shadow-xl) !important;
 }
+
+// ═══════════════════════════════════════════
+// 隐藏浏览器原生密码显隐/清除按钮
+// 使用自定义长按按钮，避免与浏览器原生小眼睛重复
+// ═══════════════════════════════════════════
+
+// Edge / IE 的密码显隐按钮
+input[type='password']::-ms-reveal,
+input[type='password']::-ms-clear,
+input[type='text']::-ms-reveal,
+input[type='text']::-ms-clear {
+  display: none !important;
+}
+
+// Webkit 密码框的显隐按钮（部分版本）
+input[type='password']::-webkit-credentials-auto-fill-button,
+input[type='password']::-webkit-caps-lock-indicator,
+input[type='password']::-webkit-contacts-auto-fill-button {
+  display: none !important;
+}
+
+// 隐藏浏览器自动填充后的黄色背景（保留功能）
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus {
+  -webkit-text-fill-color: var(--text-primary);
+  transition: background-color 9999s ease-in-out 0s;
+}
