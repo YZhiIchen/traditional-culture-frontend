@@ -78,6 +78,9 @@ traditional-culture-frontend/
 ```text
 traditional-culture-backend/
 ├── app/                             # 应用主包
+│   ├── middleware/                  # 安全中间件
+│   │   ├── __init__.py
+│   │   └── security.py             # 安全响应头 + 输入清洗 + 启动校验
 │   ├── models/                      # ORM 模型
 │   │   ├── __init__.py
 │   │   ├── author.py
