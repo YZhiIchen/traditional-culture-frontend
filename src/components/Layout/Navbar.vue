@@ -328,4 +328,61 @@ const handleCommand = async (cmd: string) => {
 :deep(.dropdown-item-danger) {
   color: var(--cinnabar);
 }
+
+// ═══════════════════════════════════════
+// 移动端适配 — 压缩顶栏
+// ═══════════════════════════════════════
+@media (max-width: 768px) {
+  .navbar {
+    padding: 0 var(--space-md);
+
+    .navbar-left {
+      gap: 8px;
+    }
+
+    .toggle-btn {
+      width: 40px;
+      height: 40px;
+    }
+
+    .page-indicator {
+      gap: 6px;
+
+      .page-dot {
+        font-size: 5px;
+      }
+
+      .page-title {
+        font-size: 13px;
+        letter-spacing: 0.5px;
+        max-width: 120px;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+      }
+    }
+
+    .navbar-right {
+      gap: 4px;
+    }
+
+    .icon-btn {
+      width: 40px;
+      height: 40px;
+
+      &:hover {
+        transform: none;
+      }
+    }
+
+    .user-chip {
+      padding: 2px;
+
+      .user-name,
+      .user-chevron {
+        display: none;
+      }
+    }
+  }
+}
 </style>

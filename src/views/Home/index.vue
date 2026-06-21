@@ -784,6 +784,97 @@ onMounted(async () => {
       animation: pulse 1s ease-in-out infinite;
     }
   }
+
+  // ═══════════════════════════════════════
+  // 移动端适配
+  // ═══════════════════════════════════════
+  @media (max-width: 768px) {
+    .page-lead {
+      margin-bottom: var(--space-md);
+
+      .lead-title {
+        font-size: 22px;
+        letter-spacing: 2px;
+      }
+
+      .lead-desc {
+        font-size: 12px;
+      }
+    }
+
+    .stats-row {
+      grid-template-columns: repeat(2, 1fr);
+      gap: var(--space-sm);
+      margin-bottom: var(--space-md);
+    }
+
+    .stat-card {
+      padding: var(--space-md);
+      gap: 10px;
+
+      .stat-icon {
+        width: 36px;
+        height: 36px;
+      }
+
+      .stat-body .stat-value {
+        font-size: 18px;
+      }
+    }
+
+    .section-card {
+      margin-bottom: var(--space-md);
+
+      .section-head {
+        padding: 10px var(--space-md);
+      }
+
+      .section-body {
+        padding: var(--space-sm);
+      }
+    }
+
+    .recent-row {
+      padding: 8px 4px;
+      gap: 10px;
+
+      .recent-icon {
+        width: 30px;
+        height: 30px;
+      }
+    }
+
+    .quick-actions {
+      grid-template-columns: 1fr;
+      gap: var(--space-sm);
+
+      .quick-card {
+        flex-direction: row;
+        padding: var(--space-md);
+        gap: 12px;
+
+        .quick-icon {
+          width: 40px;
+          height: 40px;
+        }
+      }
+    }
+
+    .grid-aside {
+      position: static;
+    }
+
+    .today-stats .today-item .today-num {
+      font-size: 20px;
+    }
+  }
+
+  // 超小屏：统计卡片变单列
+  @media (max-width: 480px) {
+    .stats-row {
+      grid-template-columns: 1fr;
+    }
+  }
 }
 
 @keyframes fadeInUp {

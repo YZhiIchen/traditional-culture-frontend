@@ -504,6 +504,88 @@ const goDetail = (item: ResultItem) => {
       }
     }
   }
+
+  // ═══════════════════════════════════════
+  // 移动端适配
+  // ═══════════════════════════════════════
+  @media (max-width: 768px) {
+    .page-lead {
+      margin-bottom: var(--space-md);
+
+      .lead-title {
+        font-size: 22px;
+        letter-spacing: 2px;
+      }
+
+      .lead-desc {
+        font-size: 12px;
+      }
+    }
+
+    .search-bar {
+      margin-bottom: var(--space-lg);
+    }
+
+    .search-field {
+      flex-wrap: wrap;
+      padding: 8px;
+
+      .search-icon {
+        padding: 0 8px 0 10px;
+      }
+
+      .search-input {
+        height: 44px;
+        font-size: 16px; // 防止 iOS Safari 聚焦时自动放大
+        flex: 1 1 calc(100% - 40px);
+      }
+
+      .search-submit {
+        width: 100%;
+        height: 44px;
+        justify-content: center;
+        margin-right: 0;
+        margin-top: 4px;
+      }
+    }
+
+    .result-item {
+      padding: var(--space-md);
+      gap: 12px;
+
+      .item-icon {
+        width: 36px;
+        height: 36px;
+      }
+
+      .item-body {
+        .item-top {
+          flex-wrap: wrap;
+          gap: 6px;
+
+          .item-title {
+            font-size: 14px;
+          }
+        }
+
+        .item-summary {
+          font-size: 12px;
+          -webkit-line-clamp: 3;
+        }
+
+        .item-meta {
+          .meta-link {
+            opacity: 1;
+            transform: none;
+          }
+        }
+      }
+    }
+
+    .search-guide {
+      padding: var(--space-2xl) 0;
+    }
+  }
 }
 
 // ── 动画覆盖 ──

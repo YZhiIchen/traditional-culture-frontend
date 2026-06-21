@@ -1,0 +1,29 @@
+// ═══════════════════════════════════════════
+// 本地字体声明 — Noto Serif SC
+// 字体文件存放于 public/fonts/，避免依赖外部 CDN
+// ═══════════════════════════════════════════
+
+@font-face {
+  font-family: 'Noto Serif SC';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 400;
+  src: url('/fonts/noto-serif-sc-chinese-simplified-400-normal.woff2') format('woff2'),
+       url('/fonts/noto-serif-sc-chinese-simplified-400-normal.woff') format('woff');
+}
+
+@font-face {
+  font-family: 'Noto Serif SC';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 600;
+  src: url('/fonts/noto-serif-sc-chinese-simplified-600-normal.woff') format('woff');
+}
+
+@font-face {
+  font-family: 'Noto Serif SC';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 700;
+  src: url('/fonts/noto-serif-sc-chinese-simplified-700-normal.woff') format('woff');
+}

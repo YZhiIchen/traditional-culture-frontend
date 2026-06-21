@@ -1,38 +1,62 @@
 // ═══════════════════════════════════════════
 // 传统文化数字化平台 — 主题色系统
 // Contemporary Shanshui — 当代山水美学
+// 每个颜色变量均提供 HEX 回退值，兼容不支持 oklch() 的旧浏览器
 // ═══════════════════════════════════════════
 
 :root {
   // ── 水墨色阶（从浓到淡，偏向暖褐）──
+  --ink-900: #1a1612;
   --ink-900: oklch(12% 0.02 55);     // 浓墨
+  --ink-800: #2c2620;
   --ink-800: oklch(22% 0.02 55);     // 中墨
+  --ink-700: #45403a;
   --ink-700: oklch(34% 0.015 55);    // 淡墨
+  --ink-600: #635e56;
   --ink-600: oklch(48% 0.012 55);    // 远山灰
+  --ink-500: #7c7770;
   --ink-500: oklch(60% 0.01 55);     // 烟灰
+  --ink-400: #9a968c;
   --ink-400: oklch(72% 0.008 55);    // 薄雾
+  --ink-300: #b4b0a6;
   --ink-300: oklch(82% 0.006 55);    // 轻烟
+  --ink-200: #ccc9c0;
   --ink-200: oklch(90% 0.004 55);    // 缟素
+  --ink-100: #e0ded8;
   --ink-100: oklch(95% 0.003 55);    // 宣纸底
+  --ink-50:  #ebe9e4;
   --ink-50:  oklch(97.5% 0.002 55);  // 雪宣
 
   // ── 传统文化色彩 ──
+  --cinnabar:     #a33322;
   --cinnabar:     oklch(48% 0.16 28);   // 朱砂红（主色）
+  --cinnabar-50:  #f0ddd9;
   --cinnabar-50:  oklch(94% 0.02 28);   // 朱砂极淡
+  --cinnabar-100: #e6c5be;
   --cinnabar-100: oklch(90% 0.04 28);   // 朱砂淡
+  --cinnabar-hover: #bc3a26;
   --cinnabar-hover: oklch(55% 0.18 28);
+  --cinnabar-active: #86291a;
   --cinnabar-active: oklch(40% 0.14 28);
 
+  --gold:         #b8923a;
   --gold:         oklch(65% 0.12 75);   // 金色
+  --gold-light:   #d4b87a;
   --gold-light:   oklch(82% 0.06 75);   // 淡金
+  --gold-pale:    #e8dab8;
   --gold-pale:    oklch(92% 0.03 75);   // 金粉
 
+  --celadon:      #5e8a6e;
   --celadon:      oklch(58% 0.08 145);  // 青瓷绿
+  --celadon-50:   #dfeee5;
   --celadon-50:   oklch(94% 0.015 145); // 青瓷淡
 
+  --azure:        #4d6b9e;
   --azure:        oklch(52% 0.07 250);  // 青花蓝
+  --azure-50:     #e0e6f0;
   --azure-50:     oklch(95% 0.01 250);  // 青花淡
 
+  --vermillion:   #a04525;
   --vermillion:   oklch(50% 0.15 35);   // 赭石
 
   // ── 语义色 ──
@@ -41,17 +65,21 @@
   --color-primary-active: var(--cinnabar-active);
   --color-primary-light:  var(--cinnabar-50);
   --color-success:        var(--celadon);
+  --color-warning:        #c69a3e;
   --color-warning:        oklch(65% 0.10 80);
   --color-danger:         var(--cinnabar);
   --color-info:           var(--ink-400);
 
   // ── 背景系统 ──
   --bg-body:           var(--ink-50);
+  --bg-card:           #fdfcf9;
   --bg-card:           oklch(99% 0.002 55);
   --bg-card-solid:     #ffffff;
   --bg-sidebar:        linear-gradient(180deg, var(--ink-900), #0f0b07 100%);
+  --bg-header:         rgba(250, 248, 244, 0.85);
   --bg-header:         oklch(98% 0.003 55 / 0.85);
   --bg-main:           var(--ink-50);
+  --bg-overlay:        rgba(26, 22, 18, 0.45);
   --bg-overlay:        oklch(12% 0.02 55 / 0.45);
 
   // ── 文字系统 ──
@@ -60,16 +88,23 @@
   --text-secondary:    var(--ink-500);
   --text-tertiary:     var(--ink-400);
   --text-placeholder:  var(--ink-400);
+  --text-inverse:      #f0eee9;
   --text-inverse:      oklch(95% 0.003 55);
 
   // ── 边框 ──
+  --border-color:      rgba(180, 176, 166, 0.4);
   --border-color:      oklch(80% 0.005 55 / 0.4);
+  --border-light:      rgba(204, 201, 192, 0.3);
   --border-light:      oklch(88% 0.003 55 / 0.3);
 
   // ── 阴影 ──
+  --shadow-sm:  0 1px 3px rgba(26, 22, 18, 0.05);
   --shadow-sm:  0 1px 3px oklch(12% 0.02 55 / 0.05);
+  --shadow-md:  0 4px 16px rgba(26, 22, 18, 0.08);
   --shadow-md:  0 4px 16px oklch(12% 0.02 55 / 0.08);
+  --shadow-lg:  0 8px 32px rgba(26, 22, 18, 0.10);
   --shadow-lg:  0 8px 32px oklch(12% 0.02 55 / 0.10);
+  --shadow-xl:  0 16px 56px rgba(26, 22, 18, 0.14);
   --shadow-xl:  0 16px 56px oklch(12% 0.02 55 / 0.14);
 
   // ── 圆角 ──
@@ -106,30 +141,52 @@
 
 // ── 暗色主题 ──
 [data-theme='dark'] {
+  --ink-900: #f0eee9;
   --ink-900: oklch(95% 0.003 55);
+  --ink-800: #d0cec8;
   --ink-800: oklch(88% 0.005 55);
+  --ink-700: #b4b0a6;
   --ink-700: oklch(78% 0.008 55);
+  --ink-600: #8e8a80;
   --ink-600: oklch(65% 0.01 55);
+  --ink-500: #7c7770;
   --ink-500: oklch(55% 0.01 55);
+  --ink-400: #5a5650;
   --ink-400: oklch(42% 0.008 55);
+  --ink-300: #45413c;
   --ink-300: oklch(32% 0.006 55);
+  --ink-200: #312e2a;
   --ink-200: oklch(22% 0.004 55);
+  --ink-100: #24201c;
   --ink-100: oklch(16% 0.003 55);
+  --ink-50:  #1a1714;
   --ink-50:  oklch(12% 0.002 55);
 
+  --bg-body:           #141210;
   --bg-body:           oklch(8% 0.002 55);
+  --bg-card:           rgba(36, 32, 28, 0.92);
   --bg-card:           oklch(14% 0.003 55 / 0.92);
+  --bg-card-solid:     #24201c;
   --bg-card-solid:     oklch(14% 0.003 55);
+  --bg-header:         rgba(26, 22, 18, 0.85);
   --bg-header:         oklch(10% 0.003 55 / 0.85);
+  --bg-main:           #1a1714;
   --bg-main:           oklch(9% 0.002 55);
+  --bg-overlay:        rgba(0, 0, 0, 0.6);
   --bg-overlay:        oklch(0% 0 0 / 0.6);
 
+  --text-primary:      #f0eee9;
   --text-primary:      oklch(95% 0.003 55);
+  --text-regular:      #d0cec8;
   --text-regular:      oklch(82% 0.005 55);
+  --text-secondary:    #9a968c;
   --text-secondary:    oklch(65% 0.008 55);
+  --text-tertiary:     #635e56;
   --text-tertiary:     oklch(50% 0.008 55);
 
+  --border-color:      rgba(77, 73, 66, 0.4);
   --border-color:      oklch(30% 0.005 55 / 0.4);
+  --border-light:      rgba(56, 52, 46, 0.3);
   --border-light:      oklch(22% 0.003 55 / 0.3);
 
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);

@@ -4,6 +4,7 @@
 // ═══════════════════════════════════════════
 
 @use './theme.scss';
+@use './fonts.scss';
 
 // ── 基础重置 ──
 *,
@@ -360,4 +361,97 @@ input:-webkit-autofill:hover,
 input:-webkit-autofill:focus {
   -webkit-text-fill-color: var(--text-primary);
   transition: background-color 9999s ease-in-out 0s;
+}
+
+// ═══════════════════════════════════════════
+// 移动端全局适配
+// ═══════════════════════════════════════════
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  // 防止移动端下拉刷新
+  overscroll-behavior-y: none;
+}
+
+// 媒体元素自适应
+img,
+svg,
+video,
+canvas {
+  max-width: 100%;
+  height: auto;
+}
+
+// 表单元素继承字体
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+// 移动端输入框字体不小于 16px，避免 iOS Safari 自动放大
+@media (max-width: 768px) {
+  html {
+    font-size: 15px;
+  }
+
+  // 装饰性山形剪影缩小
+  body::after {
+    height: 72px;
+  }
+
+  // Element Plus 组件移动端适配
+  .el-message {
+    max-width: calc(100vw - 32px);
+    min-width: auto;
+  }
+
+  .el-message-box {
+    width: calc(100vw - 32px) !important;
+    max-width: 420px;
+  }
+
+  .el-dialog {
+    width: calc(100vw - 32px) !important;
+    max-width: 420px;
+    margin: 8vh auto !important;
+  }
+
+  .el-dropdown-menu {
+    max-width: calc(100vw - 32px);
+  }
+
+  // 触控目标不小于 40px
+  .el-button {
+    min-height: 40px;
+  }
+
+  .el-button--small {
+    min-height: 36px;
+  }
+
+  // Element Plus 输入框字体不小于 16px，避免 iOS Safari 聚焦时自动放大
+  .el-input__inner,
+  .el-textarea__inner {
+    font-size: 16px !important;
+  }
+}
+
+// 超小屏（≤ 380px）进一步压缩
+@media (max-width: 380px) {
+  html {
+    font-size: 14px;
+  }
+}
+
+// 横屏适配
+@media (max-width: 768px) and (orientation: landscape) {
+  .app-shell .shell-content {
+    padding: var(--space-sm) var(--space-md);
+  }
 }

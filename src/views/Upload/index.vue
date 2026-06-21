@@ -930,6 +930,109 @@ const goDetail = () => {
       min-width: 120px;
     }
   }
+
+  // ═══════════════════════════════════════
+  // 移动端适配
+  // ═══════════════════════════════════════
+  @media (max-width: 768px) {
+    .page-lead {
+      margin-bottom: var(--space-lg);
+
+      .lead-title {
+        font-size: 22px;
+        letter-spacing: 2px;
+      }
+
+      .lead-desc {
+        font-size: 12px;
+      }
+    }
+
+    .tab-bar {
+      .tab-item {
+        padding: 10px 14px;
+        font-size: 12px;
+        flex: 1;
+        justify-content: center;
+        gap: 6px;
+      }
+    }
+
+    .tab-panel {
+      padding: var(--space-md);
+    }
+
+    .dropzone {
+      padding: 32px 16px;
+    }
+
+    .text-form {
+      .field {
+        .field-input {
+          height: 44px;
+          font-size: 16px; // 防止 iOS Safari 聚焦时自动放大
+        }
+
+        .field-textarea {
+          font-size: 16px; // 防止 iOS Safari 聚焦时自动放大
+          min-height: 200px;
+        }
+      }
+
+      .text-actions {
+        flex-direction: column;
+
+        .action-btn,
+        .ghost-btn {
+          width: 100%;
+          justify-content: center;
+          min-height: 44px;
+        }
+      }
+    }
+
+    .action-btn {
+      padding: 0 20px;
+      height: 44px;
+      font-size: 13px;
+      letter-spacing: 1px;
+    }
+
+    .canvas-aside {
+      position: static;
+
+      .aside-ornament {
+        display: none;
+      }
+    }
+
+    // 结果弹窗移动端适配
+    .result-modal-mask {
+      padding: 16px;
+      align-items: center;
+    }
+
+    .result-modal {
+      width: 100%;
+      max-width: none;
+      max-height: calc(100dvh - 32px);
+      overflow-y: auto;
+    }
+
+    .result-modal-inner {
+      padding: var(--space-xl) var(--space-lg);
+    }
+
+    .result-actions {
+      flex-direction: column;
+
+      .action-btn,
+      .ghost-btn {
+        width: 100%;
+        min-width: auto;
+      }
+    }
+  }
 }
 
 // ── 动画 ──

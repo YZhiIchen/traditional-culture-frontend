@@ -1,15 +1,28 @@
 <template>
-  <div class="app-shell" :class="{ 'is-collapsed': sidebarCollapsed }">
+  <div
+    class="app-shell"
+    :class="{
+      'is-collapsed': sidebarCollapsed,
+      'is-mobile-open': mobileSidebarOpen
+    }"
+  >
+    <!-- 移动端遮罩 -->
+    <div
+      v-if="mobileSidebarOpen"
+      class="mobile-mask"
+      @click="mobileSidebarOpen = false"
+    />
+
     <!-- 侧边栏 -->
     <aside class="shell-sidebar">
-      <Sidebar :collapsed="sidebarCollapsed" />
+      <Sidebar :collapsed="sidebarCollapsed" @navigate="onNavigate" />
     </aside>
 
     <!-- 主区域 -->
     <div class="shell-main">
       <!-- 顶部栏 -->
       <header class="shell-header">
-        <Navbar @toggle-sidebar="appStore.toggleSidebar()" />
+        <Navbar @toggle-sidebar="handleToggleSidebar" />
       </header>
 
       <!-- 内容区 -->
@@ -36,7 +49,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useAppStore } from '@/stores/app'
 import { useUserStore } from '@/stores/user'
@@ -47,11 +60,42 @@ const appStore = useAppStore()
 const userStore = useUserStore()
 const { sidebarCollapsed } = storeToRefs(appStore)
 
+// 移动端抽屉侧栏状态
+const mobileSidebarOpen = ref(false)
+const MOBILE_BREAKPOINT = 768
+
+const handleToggleSidebar = () => {
+  if (window.innerWidth <= MOBILE_BREAKPOINT) {
+    mobileSidebarOpen.value = !mobileSidebarOpen.value
+  } else {
+    appStore.toggleSidebar()
+  }
+}
+
+// 移动端点击导航后自动关闭抽屉
+const onNavigate = () => {
+  if (window.innerWidth <= MOBILE_BREAKPOINT) {
+    mobileSidebarOpen.value = false
+  }
+}
+
+// 窗口尺寸变化时重置移动端状态
+const handleResize = () => {
+  if (window.innerWidth > MOBILE_BREAKPOINT) {
+    mobileSidebarOpen.value = false
+  }
+}
+
 // 页面刷新后重新加载用户信息
 onMounted(() => {
   if (localStorage.getItem('token') && !userStore.userInfo) {
     userStore.fetchUserInfo().catch(() => {})
   }
+  window.addEventListener('resize', handleResize)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', handleResize)
 })
 </script>
 
@@ -59,8 +103,13 @@ onMounted(() => {
 .app-shell {
   display: flex;
   height: 100vh;
+  height: 100dvh;
   overflow: hidden;
   background: var(--bg-body);
+
+  .mobile-mask {
+    display: none;
+  }
 
   .shell-sidebar {
     flex-shrink: 0;
@@ -144,6 +193,72 @@ onMounted(() => {
 }
 
 // ═══════════════════════════════════════
+// 移动端适配 — 抽屉式侧栏
+// ═══════════════════════════════════════
+@media (max-width: 768px) {
+  .app-shell {
+    .mobile-mask {
+      display: block;
+      position: fixed;
+      inset: 0;
+      z-index: 150;
+      background: var(--bg-overlay);
+      backdrop-filter: blur(2px);
+      -webkit-backdrop-filter: blur(2px);
+      animation: fadeIn 0.2s ease;
+    }
+
+    .shell-sidebar {
+      position: fixed;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 240px;
+      z-index: 200;
+      transform: translateX(-100%);
+      transition: transform var(--transition-normal);
+      box-shadow: var(--shadow-xl);
+    }
+
+    &.is-mobile-open .shell-sidebar {
+      transform: translateX(0);
+    }
+
+    // 桌面端折叠状态在移动端不生效
+    &.is-collapsed .shell-sidebar {
+      width: 240px;
+    }
+
+    .shell-main {
+      width: 100%;
+    }
+
+    .shell-header {
+      height: 52px;
+    }
+
+    .shell-content {
+      padding: var(--space-md);
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .content-inner {
+      min-height: auto;
+    }
+
+    .shell-footer {
+      margin-top: var(--space-xl);
+      padding: 16px 0;
+      padding-bottom: calc(16px + env(safe-area-inset-bottom));
+      font-size: 11px;
+      letter-spacing: 1px;
+      text-align: center;
+      flex-wrap: wrap;
+    }
+  }
+}
+
+// ═══════════════════════════════════════
 // 路由过渡动画 — 墨迹扩散
 // ═══════════════════════════════════════
 .ink-enter-active {
@@ -165,5 +280,10 @@ onMounted(() => {
     transform: translateY(0) scale(1);
     filter: blur(0);
   }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 </style>

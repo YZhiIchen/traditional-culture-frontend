@@ -22,7 +22,7 @@
     </div>
 
     <!-- 导航菜单 -->
-    <ul class="nav-list">
+    <ul class="nav-list" @click="onNavClick">
       <li>
         <router-link
           to="/home"
@@ -212,6 +212,10 @@ const props = defineProps<{
   collapsed: boolean
 }>()
 
+const emit = defineEmits<{
+  (e: 'navigate'): void
+}>()
+
 const route = useRoute()
 const userStore = useUserStore()
 
@@ -220,6 +224,11 @@ const isActive = (path: string) => {
 }
 
 const isAdmin = computed(() => userStore.userInfo?.role === 'admin')
+
+// 点击导航项时通知父组件（用于移动端自动关闭抽屉）
+const onNavClick = () => {
+  emit('navigate')
+}
 </script>
 
 <style scoped lang="scss">
