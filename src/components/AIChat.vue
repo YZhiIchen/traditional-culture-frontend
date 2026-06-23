@@ -34,9 +34,12 @@
           <div v-for="(msg, i) in messages" :key="i"
                class="msg" :class="msg.role">
             <div class="msg-avatar">{{ msg.role === 'user' ? '我' : '墨' }}</div>
-            <div class="msg-content">{{ msg.content }}</div>
+            <div class="msg-content">
+              <span v-if="msg.role === 'assistant' && msg.streaming" class="streaming-text">{{ msg.content }}<span class="cursor-blink">|</span></span>
+              <template v-else>{{ msg.content }}</template>
+            </div>
           </div>
-          <div v-if="sending" class="msg assistant">
+          <div v-if="sending && !streamingMsg" class="msg assistant">
             <div class="msg-avatar">墨</div>
             <div class="msg-content typing">
               <span class="dot" /><span class="dot" /><span class="dot" />
@@ -67,13 +70,13 @@
 <script setup lang="ts">
 import { ref, nextTick } from 'vue'
 import { ElMessage } from 'element-plus'
-import request from '@/utils/request'
 
 const visible = ref(false)
 const inputText = ref('')
 const sending = ref(false)
+const streamingMsg = ref(false)
 const bodyRef = ref<HTMLDivElement>()
-const messages = ref<{ role: string; content: string }[]>([])
+const messages = ref<{ role: string; content: string; streaming?: boolean }[]>([])
 
 const suggestions = [
   '青花瓷有什么特点？',
@@ -96,16 +99,76 @@ const send = async (text: string) => {
 
   messages.value.push({ role: 'user', content: msg })
   sending.value = true
+  streamingMsg.value = false
   await scrollToBottom()
 
   try {
-    const history = messages.value.slice(-10, -1) // 最近10条作为上下文
-    const res = await request.post('/chat', {
-      message: msg,
-      history: history.map(h => ({ role: h.role, content: h.content })),
+    const token = localStorage.getItem('token')
+    const resp = await fetch('/api/chat', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify({ message: msg }),
     })
-    messages.value.push({ role: 'assistant', content: res.reply })
+
+    if (!resp.ok) {
+      const errData = await resp.json().catch(() => null)
+      throw new Error(errData?.message || `请求失败 (${resp.status})`)
+    }
+
+    // 创建助手消息占位，流式追加内容
+    const assistantIdx = messages.value.length
+    messages.value.push({ role: 'assistant', content: '', streaming: true })
+    streamingMsg.value = true
+    await scrollToBottom()
+
+    const reader = resp.body!.getReader()
+    const decoder = new TextDecoder()
+    let buffer = ''
+
+    while (true) {
+      const { done, value } = await reader.read()
+      if (done) break
+
+      buffer += decoder.decode(value, { stream: true })
+      const lines = buffer.split('\n')
+      buffer = lines.pop() || '' // 保留不完整的行
+
+      for (const line of lines) {
+        if (!line.startsWith('data:')) continue
+        const dataStr = line.slice(5).trim()
+        if (dataStr === '[DONE]') continue
+
+        try {
+          const data = JSON.parse(dataStr)
+          if (data.error) {
+            throw new Error(data.error)
+          }
+          if (data.content) {
+            messages.value[assistantIdx].content += data.content
+            await scrollToBottom()
+          }
+        } catch (e) {
+          // 非 JSON 行跳过
+        }
+      }
+    }
+
+    // 流结束，移除 streaming 标记
+    messages.value[assistantIdx].streaming = false
+    streamingMsg.value = false
   } catch (e: any) {
+    // 如果已有流式消息但出错，标记结束
+    const lastMsg = messages.value[messages.value.length - 1]
+    if (lastMsg && lastMsg.role === 'assistant' && lastMsg.streaming) {
+      lastMsg.streaming = false
+      if (!lastMsg.content) {
+        messages.value.pop()
+      }
+    }
+    streamingMsg.value = false
     ElMessage.error(e.message || '问答服务暂不可用')
   } finally {
     sending.value = false
@@ -299,6 +362,17 @@ const send = async (text: string) => {
     &:nth-child(2) { animation-delay: 0.2s; }
     &:nth-child(3) { animation-delay: 0.4s; }
   }
+}
+
+.cursor-blink {
+  animation: blink 0.8s step-end infinite;
+  color: #c23b22;
+  font-weight: 300;
+}
+
+@keyframes blink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
 }
 
 @keyframes bounce {
