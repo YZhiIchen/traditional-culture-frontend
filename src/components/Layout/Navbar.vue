@@ -149,8 +149,8 @@ const handleCommand = async (cmd: string) => {
         type: 'warning',
         confirmButtonClass: 'el-button--danger'
       })
-      userStore.userInfo = null
-      localStorage.removeItem('token')
+      // 调用后端登出接口，使当前会话失效（单点登录）
+      await userStore.logout()
       ElMessage.success('已退出')
       router.push('/login')
     } catch {

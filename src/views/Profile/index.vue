@@ -235,7 +235,7 @@
     </div>
 
     <!-- 头像裁剪弹窗 -->
-    <div v-if="cropVisible" class="crop-mask" @click.self="!moved && closeCrop()">
+    <div v-if="cropVisible" class="crop-mask" @mousedown="onMaskMouseDown" @click.self="onMaskClick">
       <div class="crop-dialog">
         <h3 class="crop-title">裁剪头像</h3>
         <p class="crop-tip">拖动调整位置，滚轮缩放（0.9~1.2）</p>
@@ -367,6 +367,10 @@ const handleAvatarChange = async (e: Event) => {
       imgPos.x = (CROP_SIZE - rawImgSize.w) / 2
       imgPos.y = (CROP_SIZE - rawImgSize.h) / 2
       clampImgPos()
+      moved.value = false
+      dragging.value = false
+      dragStartedInside.value = false
+      mouseDownOnMask = false
       cropVisible.value = true
     }
     img2.src = rawImage.value
@@ -387,6 +391,7 @@ const onWheel = (e: WheelEvent) => {
 const startDrag = (e: MouseEvent) => {
   dragging.value = true
   moved.value = false
+  dragStartedInside.value = true
   dragStart.x = e.clientX
   dragStart.y = e.clientY
   dragStart.ox = imgPos.x
@@ -404,17 +409,46 @@ const startDrag = (e: MouseEvent) => {
     dragging.value = false
     document.removeEventListener('mousemove', move)
     document.removeEventListener('mouseup', up)
+    // 拖拽结束后保留 moved 状态一段时间，防止 click 事件误触发关闭
     if (moved.value) {
-      setTimeout(() => { moved.value = false }, 100)
+      setTimeout(() => { moved.value = false }, 150)
     }
+    // 延迟重置 dragStartedInside，确保 click 事件先处理完
+    setTimeout(() => { dragStartedInside.value = false }, 0)
   }
   document.addEventListener('mousemove', move)
   document.addEventListener('mouseup', up)
 }
 
+// ── 裁剪弹窗关闭逻辑 ──
+// 核心思路：区分"从裁剪框内拖拽到框外释放"和"直接点击遮罩层"
+// - mousedown 在裁剪框内 → dragStartedInside = true → 拖拽释放不关闭
+// - mousedown 直接在遮罩层上 → dragStartedInside = false → 点击关闭
+let mouseDownOnMask = false
+const dragStartedInside = ref(false)
+
+const onMaskMouseDown = (e: MouseEvent) => {
+  // 记录 mousedown 是否直接发生在遮罩层上（而非弹窗内部）
+  mouseDownOnMask = (e.target === e.currentTarget)
+}
+
+const onMaskClick = () => {
+  // 仅当 mousedown 和 click 都发生在遮罩层上，且不是从裁剪框内拖出的操作时，才关闭
+  if (mouseDownOnMask && !dragStartedInside.value && !moved.value) {
+    closeCrop()
+  }
+  // 重置状态
+  mouseDownOnMask = false
+  dragStartedInside.value = false
+}
+
 const closeCrop = () => {
   cropVisible.value = false
   rawImage.value = ''
+  moved.value = false
+  dragging.value = false
+  mouseDownOnMask = false
+  dragStartedInside.value = false
 }
 
 const confirmCrop = async () => {
@@ -453,6 +487,10 @@ const confirmCrop = async () => {
   ctx.clip()
   ctx.drawImage(realImg, sx, sy, sw, sh, 0, 0, CROP_SIZE, CROP_SIZE)
   cropVisible.value = false
+  moved.value = false
+  dragging.value = false
+  dragStartedInside.value = false
+  mouseDownOnMask = false
 
   const blob: Blob = await new Promise((resolve) => {
     canvas.toBlob((b) => resolve(b!), 'image/png')
@@ -705,12 +743,19 @@ const handleDeleteAccount = async () => {
       box-shadow: var(--shadow-sm);
       margin-bottom: var(--space-md);
 
-      .avatar-wrap {
+      .avatar-box {
         position: relative;
         display: inline-block;
         width: 80px;
         height: 80px;
         margin-bottom: 12px;
+      }
+
+      .avatar-wrap {
+        position: relative;
+        display: inline-block;
+        width: 80px;
+        height: 80px;
         border-radius: 50%;
         overflow: hidden;
 
@@ -734,28 +779,36 @@ const handleDeleteAccount = async () => {
           font-weight: 700;
           font-family: var(--font-heading);
         }
+      }
 
-        .avatar-edit {
-          all: unset;
-          position: absolute;
-          bottom: 2px;
-          right: 2px;
-          width: 26px;
-          height: 26px;
-          border-radius: 50%;
-          background: rgba(0, 0, 0, 0.45);
-          border: none;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          cursor: pointer;
-          color: #fff;
-          transition: all var(--transition-fast);
-          backdrop-filter: blur(2px);
+      // 头像编辑按钮（pen 图标）— 圆形悬浮按钮
+      .avatar-edit {
+        all: unset;
+        position: absolute;
+        bottom: -4px;
+        right: -4px;
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--cinnabar), oklch(42% 0.14 28));
+        border: 2px solid var(--bg-card);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        color: #fff;
+        transition: all var(--transition-fast);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        box-sizing: border-box;
+        z-index: 2;
 
-          &:hover {
-            background: rgba(0, 0, 0, 0.65);
-          }
+        &:hover {
+          transform: scale(1.12);
+          box-shadow: 0 4px 12px oklch(50% 0.16 28 / 0.35);
+        }
+
+        &:active {
+          transform: scale(1.05);
         }
       }
 
@@ -1062,6 +1115,8 @@ const handleDeleteAccount = async () => {
   align-items: center;
   justify-content: center;
   z-index: 2000;
+  user-select: none;
+  -webkit-user-select: none;
 }
 .crop-dialog {
   background: var(--bg-card, #fff);
@@ -1090,6 +1145,8 @@ const handleDeleteAccount = async () => {
   background: #000;
   cursor: move;
   border-radius: 50%;
+  user-select: none;
+  -webkit-user-select: none;
 }
 .crop-img {
   position: absolute;

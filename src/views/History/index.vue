@@ -96,6 +96,7 @@
         class="history-card animate-fade-in-up"
         :style="{ animationDelay: `${0.06 * idx}s` }"
         :class="{ selected: selectedIds.includes(item.id) }"
+        @click="goDetail(item.id)"
       >
         <!-- 选择框 -->
         <div class="card-checkbox" @click.stop>
@@ -357,7 +358,8 @@ const handleSearchInput = () => {
   clearTimeout(debounceTimer)
   debounceTimer = setTimeout(() => {
     page.value = 1
-  }, 300)
+    fetchHistory()
+  }, 400)
 }
 
 const goDetail = (id: string) => {
@@ -426,7 +428,7 @@ onMounted(() => {
   fetchHistory()
 })
 
-watch([page, activeType, searchKeyword], () => {
+watch([page, activeType], () => {
   fetchHistory()
 })
 

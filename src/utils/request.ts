@@ -1,4 +1,4 @@
-import axios, { type AxiosInstance, type AxiosRequestConfig, type AxiosResponse } from 'axios'
+import axios, { type AxiosInstance, type AxiosResponse } from 'axios'
 import { ElMessage } from 'element-plus'
 import router from '@/router'  // 导入路由
 
@@ -39,7 +39,13 @@ class Request {
           if (!this.isRedirecting) {
             this.isRedirecting = true
             localStorage.removeItem('token')
-            ElMessage.error('登录已过期，请重新登录')
+            // 单点登录：账号在其他设备登录时显示专属提示
+            const kickMsg = '您的账号已在其他设备登录，请重新登录'
+            if (message && message.includes('其他设备')) {
+              ElMessage.warning(kickMsg)
+            } else {
+              ElMessage.error('登录已过期，请重新登录')
+            }
             router.push('/login')
             setTimeout(() => {
               this.isRedirecting = false
@@ -63,7 +69,7 @@ class Request {
           } else if (respData.message) {
             errMsg = respData.message  // 后端统一 {code, message, data} 格式
           } else if (respData.detail) {
-            // Pydantic 验证错误: {"detail": [{"msg": "..."}, ...]}
+            // Pydantic 验证错误 / HTTPException: {"detail": "..."}
             const details = Array.isArray(respData.detail) ? respData.detail : [respData.detail]
             errMsg = details.map((d: any) => d.msg || d).join('；')
           }
@@ -74,7 +80,12 @@ class Request {
           if (!this.isRedirecting) {
             this.isRedirecting = true
             localStorage.removeItem('token')
-            ElMessage.error('登录已过期，请重新登录')
+            // 单点登录：检测是否被其他设备踢下线
+            if (errMsg.includes('其他设备')) {
+              ElMessage.warning(errMsg)
+            } else {
+              ElMessage.error('登录已过期，请重新登录')
+            }
             router.push('/login')
             setTimeout(() => { this.isRedirecting = false }, 3000)
           }

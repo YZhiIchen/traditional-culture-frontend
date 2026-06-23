@@ -33,14 +33,23 @@
       </div>
     </div>
 
+    <!-- 自动刷新指示 -->
+    <div class="refresh-bar animate-fade-in">
+      <span class="refresh-dot" :class="{ active: refreshing }" />
+      <span class="refresh-text">
+        {{ refreshing ? '正在更新…' : `数据每 ${REFRESH_INTERVAL}s 自动刷新` }}
+      </span>
+      <button class="refresh-btn" @click="loadData(true)">手动刷新</button>
+    </div>
+
     <!-- 主区域：双栏 -->
     <div class="home-grid">
       <!-- 左栏：最近活动 -->
       <div class="grid-main animate-fade-in-up delay-2">
         <section class="section-card">
           <div class="section-head">
-            <span class="section-head-title">最近识别</span>
-            <router-link to="/history" class="section-head-link">查看全部 →</router-link>
+            <span class="section-head-title">系统最近识别</span>
+            <router-link to="/history" class="section-head-link">我的记录 →</router-link>
           </div>
           <div class="section-body">
             <div
@@ -60,7 +69,7 @@
               </div>
               <div class="recent-body">
                 <span class="recent-title">{{ item.title }}</span>
-                <span class="recent-meta">{{ item.dynasty }} · {{ item.type }}</span>
+                <span class="recent-meta">{{ item.dynasty }} · {{ item.type }}<template v-if="item.uploader"> · {{ item.uploader }}</template></span>
               </div>
               <div class="recent-time">
                 <span>{{ formatTime(item.time) }}</span>
@@ -124,21 +133,21 @@
         <!-- 今日统计 -->
         <section class="section-card">
           <div class="section-head">
-            <span class="section-head-title">今日概览</span>
+            <span class="section-head-title">系统概览</span>
           </div>
           <div class="section-body">
             <div class="today-stats">
               <div class="today-item">
-                <span class="today-num">3</span>
-                <span class="today-label">上传数</span>
+                <span class="today-num">{{ todayStats.upload }}</span>
+                <span class="today-label">今日上传</span>
               </div>
               <div class="today-item">
-                <span class="today-num">5</span>
-                <span class="today-label">识别数</span>
+                <span class="today-num">{{ todayStats.recognized }}</span>
+                <span class="today-label">今日识别</span>
               </div>
               <div class="today-item">
-                <span class="today-num">12</span>
-                <span class="today-label">检索数</span>
+                <span class="today-num">{{ todayStats.users }}</span>
+                <span class="today-label">注册用户</span>
               </div>
             </div>
           </div>
@@ -147,7 +156,7 @@
         <!-- 热门标签 -->
         <section class="section-card">
           <div class="section-head">
-            <span class="section-head-title">热门标签</span>
+            <span class="section-head-title">全局热门标签</span>
           </div>
           <div class="section-body">
             <div class="tag-cloud">
@@ -163,7 +172,7 @@
         <!-- 朝代分布 -->
         <section class="section-card">
           <div class="section-head">
-            <span class="section-head-title">馆藏朝代分布</span>
+            <span class="section-head-title">全局朝代分布</span>
           </div>
           <div class="section-body">
             <div class="dynasty-bars">
@@ -189,46 +198,54 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import request from '@/utils/request'
 
 const router = useRouter()
 const loading = ref(true)
+const refreshing = ref(false)
+
+// 自动刷新间隔（秒）
+const REFRESH_INTERVAL = 60
+let refreshTimer: ReturnType<typeof setInterval> | null = null
 
 // ── 统计卡片 ──
 const statCards = ref([
   {
-    label: '馆藏资源',
-    value: '1,286',
-    trend: 24,
+    label: '系统馆藏',
+    value: '--',
+    trend: 0,
     bg: 'oklch(55% 0.16 28 / 0.08)',
     icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--cinnabar)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>'
   },
   {
     label: '识别总数',
-    value: '3,842',
-    trend: 18,
+    value: '--',
+    trend: 0,
     bg: 'oklch(58% 0.08 145 / 0.08)',
     icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--celadon)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>'
   },
   {
     label: '本周新增',
-    value: '56',
-    trend: 12,
+    value: '--',
+    trend: 0,
     bg: 'oklch(65% 0.12 75 / 0.08)',
     icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>'
   },
   {
     label: '识别准确率',
-    value: '94.2%',
-    trend: 3,
+    value: '--',
+    trend: 0,
     bg: 'oklch(52% 0.07 250 / 0.08)',
     icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--azure)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>'
   }
 ])
 
-// ── 最近识别（初始为空，API 返回后填充）──
+// ── 今日统计（真实数据）──
+const todayStats = ref({ upload: 0, recognized: 0, users: 0 })
+
+// ── 最近识别 ──
 interface RecentItem {
   id: string
   title: string
@@ -236,14 +253,15 @@ interface RecentItem {
   type: string
   time: number
   status: 'done' | 'processing'
+  uploader?: string
 }
 
 const recentList = ref<RecentItem[]>([])
 
-// ── 热门标签（初始为空，API 填充）──
+// ── 热门标签 ──
 const hotTags = ref<{ name: string; size: number; opacity: number }[]>([])
 
-// ── 朝代分布（初始为空，API 填充）──
+// ── 朝代分布 ──
 const dynasties = ref<{ name: string; count: number; pct: number }[]>([])
 
 const formatTime = (ts: number) => {
@@ -264,59 +282,87 @@ const goSearch = (keyword: string) => {
   router.push(`/search?keyword=${encodeURIComponent(keyword)}`)
 }
 
-onMounted(async () => {
+// ── 数据加载（支持静默刷新）──
+const loadData = async (silent = false) => {
+  if (silent) {
+    refreshing.value = true
+  } else {
+    loading.value = true
+  }
+
   try {
-    const [statsRes, histRes, tagsRes, dynRes] = await Promise.all([
-      request.get('/dashboard/stats'),
-      request.get('/recognition/history', { page: 1, pageSize: 5 }),
-      request.get('/dashboard/tags'),
-      request.get('/dashboard/dynasties')
+    // 并行请求全局接口，减少总延迟
+    const [statsRes, activityRes, tagsRes, dynRes] = await Promise.all([
+      request.get('/dashboard/global-stats'),
+      request.get('/dashboard/recent-activity'),
+      request.get('/dashboard/global-tags'),
+      request.get('/dashboard/global-dynasties')
     ])
 
+    // 统计卡片
     const stats: any = statsRes
     statCards.value = [
-      { label: '馆藏资源', value: String(stats.totalResources || 1286), trend: stats.weekNew || 24, bg: 'oklch(55% 0.16 28 / 0.08)', icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--cinnabar)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>' },
-      { label: '识别总数', value: String(stats.totalRecognized || 3842), trend: 18, bg: 'oklch(58% 0.08 145 / 0.08)', icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--celadon)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>' },
-      { label: '本周新增', value: String(stats.weekNew || 56), trend: 12, bg: 'oklch(65% 0.12 75 / 0.08)', icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>' },
-      { label: '识别准确率', value: stats.avgConfidence || '94.2%', trend: 3, bg: 'oklch(52% 0.07 250 / 0.08)', icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--azure)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>' }
+      { label: '系统馆藏', value: String(stats.totalResources ?? 0), trend: stats.weekNew ?? 0, bg: 'oklch(55% 0.16 28 / 0.08)', icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--cinnabar)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>' },
+      { label: '识别总数', value: String(stats.totalRecognized ?? 0), trend: 0, bg: 'oklch(58% 0.08 145 / 0.08)', icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--celadon)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>' },
+      { label: '本周新增', value: String(stats.weekNew ?? 0), trend: 0, bg: 'oklch(65% 0.12 75 / 0.08)', icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>' },
+      { label: '识别准确率', value: stats.avgConfidence || '--', trend: 0, bg: 'oklch(52% 0.07 250 / 0.08)', icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--azure)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>' }
     ]
 
-    const hist: any = histRes
-    if (hist.list?.length) {
-      recentList.value = hist.list.map((r: any) => ({
-        id: r.id,
-        title: r.result?.title || r.fileName,
-        dynasty: r.result?.dynasty || '',
-        type: r.fileType === 'image' ? '图片' : '文本',
-        time: new Date(r.recognitionTime || Date.now()).getTime(),
-        status: r.status === 'completed' ? 'done' as const : 'processing' as const
-      }))
+    // 今日概览（真实数据）
+    todayStats.value = {
+      upload: stats.todayUpload ?? 0,
+      recognized: stats.todayRecognized ?? 0,
+      users: stats.totalUsers ?? 0
     }
 
+    // 最近活动（全局）
+    const activity: any[] = activityRes || []
+    recentList.value = activity.map((r: any) => ({
+      id: r.id,
+      title: r.title || '未命名',
+      dynasty: r.dynasty || '',
+      type: r.type === 'image' ? '图片' : '文本',
+      time: r.time ? new Date(r.time).getTime() : Date.now(),
+      status: 'done' as const,
+      uploader: r.uploader || ''
+    }))
+
+    // 热门标签（全局）
     const tags: any[] = tagsRes || []
     if (tags.length) {
       const maxCount = Math.max(...tags.map((t: any) => t.count), 1)
-      hotTags.value = []
-      tags.slice(0, 15).forEach((t: any) => {
-        hotTags.value.push({
-          name: t.name,
-          size: 12 + Math.round((t.count / maxCount) * 8),
-          opacity: 0.6 + (t.count / maxCount) * 0.35
-        })
-      })
+      hotTags.value = tags.slice(0, 15).map((t: any) => ({
+        name: t.name,
+        size: 12 + Math.round((t.count / maxCount) * 8),
+        opacity: 0.6 + (t.count / maxCount) * 0.35
+      }))
     }
 
+    // 朝代分布（全局）
     const dynastiesData: any[] = dynRes || []
-    if (dynastiesData.length) {
-      dynasties.value = []
-      dynastiesData.forEach((d: any) => {
-        dynasties.value.push({ name: d.name, count: d.count, pct: d.pct })
-      })
-    }
+    dynasties.value = dynastiesData.map((d: any) => ({
+      name: d.name,
+      count: d.count,
+      pct: d.pct
+    }))
   } catch {
-    // API 失败时保留 mock 数据
+    // 静默刷新失败时保留已有数据
   } finally {
     loading.value = false
+    refreshing.value = false
+  }
+}
+
+onMounted(() => {
+  loadData()
+  // 定时自动刷新（静默模式，不显示 loading）
+  refreshTimer = setInterval(() => loadData(true), REFRESH_INTERVAL * 1000)
+})
+
+onUnmounted(() => {
+  if (refreshTimer) {
+    clearInterval(refreshTimer)
+    refreshTimer = null
   }
 })
 </script>
@@ -444,6 +490,49 @@ onMounted(async () => {
       .trend-num {
         font-size: 12px;
         color: var(--text-secondary);
+      }
+    }
+  }
+
+  // ── 自动刷新指示栏 ──
+  .refresh-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: var(--space-lg);
+    font-size: 12px;
+    color: var(--text-tertiary);
+
+    .refresh-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--celadon);
+      transition: all var(--transition-fast);
+
+      &.active {
+        background: var(--cinnabar);
+        animation: pulse 1s ease-in-out infinite;
+      }
+    }
+
+    .refresh-text {
+      flex: 1;
+    }
+
+    .refresh-btn {
+      all: unset;
+      font-size: 11px;
+      padding: 3px 12px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-color);
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all var(--transition-fast);
+
+      &:hover {
+        color: var(--cinnabar);
+        border-color: var(--cinnabar);
       }
     }
   }

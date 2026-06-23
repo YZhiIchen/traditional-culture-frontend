@@ -70,6 +70,7 @@
           :key="idx"
           class="result-item animate-fade-in-up"
           :style="{ animationDelay: `${0.1 + idx * 0.07}s` }"
+          @click="goDetail(item)"
         >
           <div class="item-icon">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
@@ -90,7 +91,7 @@
             <p class="item-summary">{{ item.summary }}</p>
             <div class="item-meta">
               <span class="meta-date">{{ item.date }}</span>
-              <button class="meta-link" @click="goDetail(item)">
+              <button class="meta-link" @click.stop="goDetail(item)">
                 查看详情
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
                      stroke="currentColor" stroke-width="2" stroke-linecap="round"
