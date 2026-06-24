@@ -25,11 +25,11 @@
           :key="d.name"
           class="timeline-node"
           :class="{ active: activeDynasty === d.name }"
-          @click="activeDynasty = activeDynasty === d.name ? null : d.name"
+          @click="onDynastyClick(d.name)"
         >
           <span class="node-dot" :style="{ background: d.color }" />
           <span class="node-label">{{ d.name }}</span>
-          <span class="node-count">{{ d.count }}</span>
+          <span class="node-year">{{ d.year }}</span>
         </button>
       </div>
     </section>
@@ -50,7 +50,7 @@
             :key="cat.key"
             class="category-card"
             :class="{ active: activeCategory === cat.key }"
-            @click="activeCategory = activeCategory === cat.key ? null : cat.key"
+            @click="onCategoryClick(cat.key)"
           >
             <div class="cat-icon" v-html="cat.icon" />
             <div class="cat-info">
@@ -87,9 +87,9 @@
           精选推荐
         </div>
 
-        <div class="featured-grid">
+        <div class="featured-grid" v-if="allFeatured.length">
           <div
-            v-for="(item, idx) in filteredFeatured"
+            v-for="(item, idx) in allFeatured"
             :key="item.id"
             class="featured-card animate-fade-in-up"
             :style="{ animationDelay: `${0.06 * idx}s` }"
@@ -112,6 +112,13 @@
               </div>
             </div>
           </div>
+        </div>
+        <div v-else-if="featuredLoading" class="featured-loading">
+          <span class="loading-dot" /><span class="loading-dot" /><span class="loading-dot" />
+        </div>
+        <div v-else class="featured-empty">
+          <span>暂无符合条件的推荐内容</span>
+          <button class="reset-btn" @click="activeDynasty = null; activeCategory = null; loadFeatured()">重置筛选</button>
         </div>
       </div>
 
@@ -148,20 +155,68 @@
             <span class="section-head-hint">基于知识图谱</span>
           </div>
           <div class="section-body">
-            <div class="graph-list">
-              <div
-                v-for="(edge, idx) in graphEdges"
-                :key="idx"
-                class="graph-edge"
-              >
-                <span class="edge-node edge-from" @click="navigateToSearch(edge.from)">
-                  {{ edge.from }}
-                </span>
-                <span class="edge-relation">{{ edge.relation }}</span>
-                <span class="edge-node edge-to" @click="navigateToSearch(edge.to)">
-                  {{ edge.to }}
-                </span>
-              </div>
+            <!-- SVG 可视化图谱 -->
+            <div class="graph-canvas" v-if="graphNodes.length">
+              <svg width="240" height="240" viewBox="0 0 240 240">
+                <!-- 连线 -->
+                <g class="graph-links">
+                  <line
+                    v-for="(line, idx) in graphLines"
+                    :key="'line-' + idx"
+                    :x1="line.from.x" :y1="line.from.y"
+                    :x2="line.to.x" :y2="line.to.y"
+                    stroke="var(--cinnabar)"
+                    stroke-width="1"
+                    opacity="0.2"
+                    stroke-dasharray="3,2"
+                  />
+                </g>
+                <!-- 关系标签 -->
+                <g class="graph-labels">
+                  <text
+                    v-for="(line, idx) in graphLines"
+                    :key="'label-' + idx"
+                    :x="line.midX" :y="line.midY"
+                    text-anchor="middle"
+                    dominant-baseline="middle"
+                    font-size="9"
+                    fill="var(--text-tertiary)"
+                    style="font-style: italic"
+                  >{{ line.relation }}</text>
+                </g>
+                <!-- 节点 -->
+                <g class="graph-nodes">
+                  <g
+                    v-for="node in graphNodes"
+                    :key="node.id"
+                    :transform="`translate(${node.x}, ${node.y})`"
+                    class="graph-node"
+                    @click="navigateToSearch(node.id)"
+                  >
+                    <circle
+                      :r="node.type === 'from' ? 18 : 14"
+                      :fill="node.type === 'from' ? 'var(--cinnabar)' : 'var(--celadon)'"
+                      opacity="0.15"
+                      class="node-bg"
+                    />
+                    <circle
+                      :r="node.type === 'from' ? 18 : 14"
+                      :stroke="node.type === 'from' ? 'var(--cinnabar)' : 'var(--celadon)'"
+                      stroke-width="1"
+                      fill="none"
+                      opacity="0.4"
+                      class="node-ring"
+                    />
+                    <text
+                      text-anchor="middle"
+                      dominant-baseline="middle"
+                      :font-size="node.id.length > 3 ? 8 : 10"
+                      :fill="node.type === 'from' ? 'var(--cinnabar)' : 'var(--text-secondary)'"
+                      style="font-weight: 500; pointer-events: none"
+                    >{{ node.id.length > 4 ? node.id.slice(0, 3) + '…' : node.id }}</text>
+                  </g>
+                </g>
+              </svg>
             </div>
           </div>
         </section>
@@ -181,7 +236,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onActivated, onDeactivated } from 'vue'
 import { useRouter } from 'vue-router'
 import request from '@/utils/request'
 
@@ -189,53 +244,46 @@ const router = useRouter()
 
 const activeDynasty = ref<string | null>(null)
 const activeCategory = ref<string | null>(null)
+const loading = ref(true)
+const featuredLoading = ref(false)
 
-// ── 朝代时间线 ──
-const dynasties = [
-  { name: '先秦', count: 42, color: 'oklch(60% 0.08 55)' },
-  { name: '汉', count: 78, color: 'oklch(58% 0.09 45)' },
-  { name: '魏晋', count: 95, color: 'oklch(56% 0.1 35)' },
-  { name: '唐', count: 280, color: 'var(--cinnabar)' },
-  { name: '宋', count: 210, color: 'oklch(65% 0.12 75)' },
-  { name: '元', count: 65, color: 'oklch(60% 0.08 145)' },
-  { name: '明', count: 160, color: 'oklch(52% 0.07 250)' },
-  { name: '清', count: 120, color: 'oklch(55% 0.05 300)' }
-]
+// ── 朝代时间线（真实数据 + 年代显示）──
+const dynasties = ref<{ name: string; count: number; year: string; color: string }[]>([
+  { name: '先秦', count: 0, year: '前2070-前221', color: 'oklch(60% 0.08 55)' },
+  { name: '汉', count: 0, year: '前202-220', color: 'oklch(58% 0.09 45)' },
+  { name: '魏晋', count: 0, year: '220-589', color: 'oklch(56% 0.1 35)' },
+  { name: '唐', count: 0, year: '618-907', color: 'var(--cinnabar)' },
+  { name: '宋', count: 0, year: '960-1279', color: 'oklch(65% 0.12 75)' },
+  { name: '元', count: 0, year: '1271-1368', color: 'oklch(60% 0.08 145)' },
+  { name: '明', count: 0, year: '1368-1644', color: 'oklch(52% 0.07 250)' },
+  { name: '清', count: 0, year: '1644-1912', color: 'oklch(55% 0.05 300)' }
+])
 
-// ── 分类 ──
-const categories = [
-  {
-    key: 'calligraphy', label: '书法碑帖', count: 286,
-    icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>'
-  },
-  {
-    key: 'painting', label: '绘画卷轴', count: 412,
-    icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>'
-  },
-  {
-    key: 'poetry', label: '诗词文献', count: 523,
-    icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>'
-  },
-  {
-    key: 'artifact', label: '器物工艺', count: 198,
-    icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>'
-  },
-  {
-    key: 'sculpture', label: '石窟造像', count: 87,
-    icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>'
-  },
-  {
-    key: 'architecture', label: '古建园林', count: 64,
-    icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="4" y="2" width="16" height="20" rx="1"/><line x1="9" y1="22" x2="9" y2="18"/><line x1="15" y1="22" x2="15" y2="18"/></svg>'
-  }
-]
+// ── 分类（真实数据）──
+const categoryIcons: Record<string, string> = {
+  calligraphy: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>',
+  painting: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>',
+  poetry: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>',
+  artifact: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>',
+  sculpture: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>',
+  architecture: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="4" y="2" width="16" height="20" rx="1"/><line x1="9" y1="22" x2="9" y2="18"/><line x1="15" y1="22" x2="15" y2="18"/></svg>'
+}
+
+const categories = ref<{ key: string; label: string; count: number; icon: string }[]>([
+  { key: 'calligraphy', label: '书法碑帖', count: 0, icon: categoryIcons['calligraphy'] },
+  { key: 'painting', label: '绘画卷轴', count: 0, icon: categoryIcons['painting'] },
+  { key: 'poetry', label: '诗词文献', count: 0, icon: categoryIcons['poetry'] },
+  { key: 'artifact', label: '器物工艺', count: 0, icon: categoryIcons['artifact'] },
+  { key: 'sculpture', label: '石窟造像', count: 0, icon: categoryIcons['sculpture'] },
+  { key: 'architecture', label: '古建园林', count: 0, icon: categoryIcons['architecture'] },
+])
 
 const getCategoryName = (key: string | null) => {
   if (!key) return ''
-  return categories.find(c => c.key === key)?.label || ''
+  return categories.value.find(c => c.key === key)?.label || ''
 }
 
-// ── 精选推荐 ──
+// ── 精选推荐（真实数据）──
 interface FeaturedItem {
   id: string
   title: string
@@ -248,90 +296,61 @@ interface FeaturedItem {
   visual: string
 }
 
-const allFeatured = ref<FeaturedItem[]>([
-  {
-    id: 'feat-01', title: '千里江山图', desc: '北宋青绿山水巅峰之作，以矿物颜料绘出壮丽山河，体现了宋代宫廷绘画的最高成就……', dynasty: '宋', author: '王希孟', category: '绘画',
-    bg: 'linear-gradient(135deg, oklch(85% 0.04 145 / 0.3), oklch(75% 0.06 145 / 0.2))',
-    accent: 'var(--celadon)',
-    visual: '<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--celadon)" stroke-width="1" stroke-linecap="round"><path d="M2 20 L8 12 L14 16 L20 6 L22 8"/></svg>'
-  },
-  {
-    id: 'feat-02', title: '《祭侄文稿》', desc: '颜真卿行书代表作，被称为"天下第二行书"，满纸忠愤，笔墨中尽显家国情怀……', dynasty: '唐', author: '颜真卿', category: '书法',
-    bg: 'linear-gradient(135deg, oklch(85% 0.02 55 / 0.3), oklch(75% 0.03 40 / 0.2))',
-    accent: 'var(--vermillion)',
-    visual: '<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--vermillion)" stroke-width="1" stroke-linecap="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>'
-  },
-  {
-    id: 'feat-03', title: '敦煌莫高窟第45窟', desc: '盛唐时期代表性洞窟，彩塑与壁画完美结合，展现佛教艺术的巅峰水准……', dynasty: '唐', author: '佚名', category: '石窟',
-    bg: 'linear-gradient(135deg, oklch(80% 0.06 250 / 0.25), oklch(70% 0.05 220 / 0.15))',
-    accent: 'var(--azure)',
-    visual: '<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--azure)" stroke-width="1" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>'
-  },
-  {
-    id: 'feat-04', title: '《永乐大典》残卷', desc: '明成祖朱棣敕修的大型类书，收录上古至明初典籍八千余种，是世界最大的百科全书……', dynasty: '明', author: '解缙等', category: '文献',
-    bg: 'linear-gradient(135deg, oklch(85% 0.02 55 / 0.3), oklch(80% 0.04 50 / 0.2))',
-    accent: 'var(--gold)',
-    visual: '<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="1" stroke-linecap="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>'
-  },
-  {
-    id: 'feat-05', title: '青花萧何月下追韩信梅瓶', desc: '元青花人物故事纹代表作，釉下青花发色浓艳，人物刻画生动传神，极为珍贵……', dynasty: '元', author: '景德镇窑', category: '器物',
-    bg: 'linear-gradient(135deg, oklch(85% 0.03 250 / 0.3), oklch(78% 0.04 240 / 0.2))',
-    accent: 'var(--azure)',
-    visual: '<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--azure)" stroke-width="1" stroke-linecap="round"><path d="M5 3h14l3 6-3 12H5L2 9l3-6z"/></svg>'
-  },
-  {
-    id: 'feat-06', title: '《诗经·国风》竹简', desc: '中国最早的诗歌总集，记录了西周至春秋时期的民间歌谣与社会风貌……', dynasty: '先秦', author: '佚名', category: '文献',
-    bg: 'linear-gradient(135deg, oklch(82% 0.02 70 / 0.25), oklch(76% 0.03 60 / 0.18))',
-    accent: 'oklch(55% 0.08 70)',
-    visual: '<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="oklch(55% 0.08 70)" stroke-width="1" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>'
-  }
-])
+const allFeatured = ref<FeaturedItem[]>([])
 
-const filteredFeatured = computed(() => {
-  return allFeatured.value.filter(item => {
-    if (activeDynasty.value && item.dynasty !== activeDynasty.value) return false
-    if (activeCategory.value) {
-      const cat = categories.find(c => c.key === activeCategory.value)
-      if (cat && item.category !== cat.label && item.category !== '文献') return false
-    }
-    return true
+// ── 文化词云（真实数据）──
+const wordCloud = ref<{ text: string; size: number; opacity: number; color: string }[]>([])
+
+const colorPool = ['var(--celadon)', 'var(--vermillion)', 'var(--gold)', 'var(--azure)', 'var(--cinnabar)']
+
+// ── 关联图谱（真实数据 + 可视化）──
+interface GraphEdge {
+  from: string
+  relation: string
+  to: string
+}
+const graphEdges = ref<GraphEdge[]>([])
+
+// 计算图谱节点和边的 SVG 坐标（环形布局）
+const graphNodes = computed(() => {
+  if (!graphEdges.value.length) return []
+  const nodeMap = new Map<string, { id: string; x: number; y: number; type: 'from' | 'to' }>()
+  const allNodes = new Set<string>()
+  graphEdges.value.forEach(e => {
+    allNodes.add(e.from)
+    allNodes.add(e.to)
   })
+  const nodes = Array.from(allNodes)
+  const cx = 120, cy = 120, r = 85
+  nodes.forEach((id, i) => {
+    const angle = (i / nodes.length) * Math.PI * 2 - Math.PI / 2
+    nodeMap.set(id, {
+      id,
+      x: cx + r * Math.cos(angle),
+      y: cy + r * Math.sin(angle),
+      type: graphEdges.value.some(e => e.from === id) ? 'from' : 'to',
+    })
+  })
+  return Array.from(nodeMap.values())
 })
 
-// ── 文化词云 ──
-const wordCloud = [
-  { text: '山水', size: 20, opacity: 0.9, color: 'var(--celadon)' },
-  { text: '书法', size: 18, opacity: 0.85, color: 'var(--vermillion)' },
-  { text: '敦煌', size: 19, opacity: 0.9, color: 'var(--gold)' },
-  { text: '青花', size: 16, opacity: 0.8, color: 'var(--azure)' },
-  { text: '佛教', size: 17, opacity: 0.85, color: 'var(--cinnabar)' },
-  { text: '唐诗', size: 18, opacity: 0.88, color: 'var(--cinnabar)' },
-  { text: '宋词', size: 17, opacity: 0.85, color: 'var(--gold)' },
-  { text: '水墨', size: 16, opacity: 0.8, color: 'var(--celadon)' },
-  { text: '造像', size: 14, opacity: 0.75, color: 'var(--azure)' },
-  { text: '诗经', size: 15, opacity: 0.78, color: 'var(--vermillion)' },
-  { text: '器物', size: 14, opacity: 0.75, color: 'var(--gold)' },
-  { text: '碑帖', size: 15, opacity: 0.78, color: 'var(--cinnabar)' },
-  { text: '园林', size: 13, opacity: 0.7, color: 'var(--celadon)' },
-  { text: '明代', size: 14, opacity: 0.75, color: 'var(--azure)' },
-  { text: '唐代', size: 17, opacity: 0.85, color: 'var(--cinnabar)' },
-  { text: '元代', size: 13, opacity: 0.7, color: 'var(--gold)' },
-  { text: '乐府', size: 12, opacity: 0.68, color: 'var(--vermillion)' },
-  { text: '纹样', size: 14, opacity: 0.75, color: 'var(--celadon)' },
-  { text: '丝路', size: 15, opacity: 0.78, color: 'var(--gold)' },
-  { text: '文人', size: 13, opacity: 0.7, color: 'var(--azure)' }
-]
-
-// ── 关联图谱边 ──
-const graphEdges = ref([
-  { from: '王维', relation: '开创', to: '文人山水画' },
-  { from: '苏轼', relation: '影响', to: '宋代书法' },
-  { from: '敦煌', relation: '交汇', to: '丝绸之路' },
-  { from: '青花', relation: '融合', to: '伊斯兰纹样' },
-  { from: '颜真卿', relation: '传承', to: '唐代楷书' },
-  { from: '诗经', relation: '影响', to: '后世诗词' },
-  { from: '佛教', relation: '催生', to: '石窟艺术' }
-])
+const graphLines = computed(() => {
+  if (!graphEdges.value.length || !graphNodes.value.length) return []
+  return graphEdges.value.map(edge => {
+    const fromNode = graphNodes.value.find(n => n.id === edge.from)
+    const toNode = graphNodes.value.find(n => n.id === edge.to)
+    if (!fromNode || !toNode) return null
+    const midX = (fromNode.x + toNode.x) / 2
+    const midY = (fromNode.y + toNode.y) / 2
+    return {
+      from: fromNode,
+      to: toNode,
+      relation: edge.relation,
+      midX,
+      midY,
+    }
+  }).filter(Boolean) as { from: any; to: any; relation: string; midX: number; midY: number }[]
+})
 
 const navigateToSearch = (keyword: string) => {
   router.push(`/search?keyword=${encodeURIComponent(keyword)}`)
@@ -348,35 +367,144 @@ const goDetail = (id: string) => {
   router.push(`/recognition/${id}`)
 }
 
-// 从后端加载数据
-onMounted(async () => {
+// ── 加载精选推荐（支持筛选）──
+const loadFeatured = async () => {
+  featuredLoading.value = true
   try {
-    const recommend: any = await request.get('/explore/recommend')
+    const params: any = {}
+    if (activeDynasty.value) params.dynasty = activeDynasty.value
+    if (activeCategory.value) params.category = activeCategory.value
+
+    const recommend: any = await request.get('/explore/recommend', params)
     if (recommend?.length) {
-      allFeatured.value = []
-      recommend.forEach((r: any) => {
-        const categoryList = ['绘画', '书法', '文献', '器物', '石窟']
-        allFeatured.value.push({
+      const categoryColors: Record<string, { bg: string; accent: string }> = {
+        '绘画': { bg: 'linear-gradient(135deg, oklch(85% 0.04 145 / 0.3), oklch(75% 0.06 145 / 0.2))', accent: 'var(--celadon)' },
+        '书法': { bg: 'linear-gradient(135deg, oklch(85% 0.02 55 / 0.3), oklch(75% 0.03 40 / 0.2))', accent: 'var(--vermillion)' },
+        '石窟': { bg: 'linear-gradient(135deg, oklch(80% 0.06 250 / 0.25), oklch(70% 0.05 220 / 0.15))', accent: 'var(--azure)' },
+        '文献': { bg: 'linear-gradient(135deg, oklch(85% 0.02 55 / 0.3), oklch(80% 0.04 50 / 0.2))', accent: 'var(--gold)' },
+        '器物': { bg: 'linear-gradient(135deg, oklch(85% 0.03 250 / 0.3), oklch(78% 0.04 240 / 0.2))', accent: 'var(--azure)' },
+      }
+      const defaultStyle = { bg: 'linear-gradient(135deg, oklch(85% 0.02 55 / 0.3), oklch(75% 0.03 40 / 0.2))', accent: 'var(--cinnabar)' }
+
+      allFeatured.value = recommend.map((r: any) => {
+        const style = categoryColors[r.category] || defaultStyle
+        return {
           id: r.id,
           title: r.title,
-          desc: r.desc,
+          desc: r.desc || '暂无描述',
           dynasty: r.dynasty,
           author: r.author,
-          category: r.category || categoryList[allFeatured.value.length % 5],
-          bg: 'linear-gradient(135deg, oklch(85% 0.02 55 / 0.3), oklch(75% 0.03 40 / 0.2))',
-          accent: 'var(--cinnabar)',
+          category: r.category,
+          bg: style.bg,
+          accent: style.accent,
           visual: '<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>'
-        })
+        }
       })
-    }
-
-    const graph: any = await request.get('/explore/graph')
-    if (graph?.length) {
-      graphEdges.value = graph.slice(0, 7)
+    } else {
+      allFeatured.value = []
     }
   } catch {
-    // 保留 mock 数据
+    // 保留已有数据
+  } finally {
+    featuredLoading.value = false
   }
+}
+
+// ── 加载基础数据（朝代/分类/词云/图谱）──
+let dataLoaded = false
+const loadBaseData = async () => {
+  try {
+    const [dynRes, tagsRes, graphRes] = await Promise.all([
+      request.get('/explore/dynasty-counts'),
+      request.get('/dashboard/global-tags'),
+      request.get('/explore/graph'),
+    ])
+
+    // 朝代（保留 year 字段，更新 count 和 color）
+    const dynData: any[] = dynRes || []
+    const dynMap = new Map(dynData.map(d => [d.name, d]))
+    dynasties.value = dynasties.value.map(d => ({
+      ...d,
+      count: dynMap.get(d.name)?.count ?? 0,
+      color: dynMap.get(d.name)?.color ?? d.color,
+    }))
+
+    // 分类（单独加载，支持后续朝代筛选复用）
+    await loadCategories()
+
+    // 词云
+    const tagsData: any[] = tagsRes || []
+    if (tagsData.length) {
+      const maxCount = Math.max(...tagsData.map(t => t.count), 1)
+      wordCloud.value = tagsData.slice(0, 20).map((t, i) => ({
+        text: t.name,
+        size: 12 + Math.round((t.count / maxCount) * 8),
+        opacity: 0.6 + (t.count / maxCount) * 0.35,
+        color: colorPool[i % colorPool.length],
+      }))
+    }
+
+    // 图谱
+    const graphData: any[] = graphRes || []
+    if (graphData.length) {
+      graphEdges.value = graphData.slice(0, 7)
+    }
+
+    dataLoaded = true
+  } catch {
+    // 保留默认数据
+  }
+}
+
+// ── 加载分类统计（支持朝代筛选）──
+const loadCategories = async () => {
+  try {
+    const params: any = {}
+    if (activeDynasty.value) params.dynasty = activeDynasty.value
+    const catData: any[] = await request.get('/explore/categories', params)
+    const catMap = new Map(catData.map(c => [c.key, c]))
+    categories.value = categories.value.map(c => ({
+      ...c,
+      count: catMap.get(c.key)?.count ?? 0,
+    }))
+  } catch {
+    // 保留已有数据
+  }
+}
+
+// ── 朝代/分类点击 → 筛选推荐 ──
+const onDynastyClick = async (name: string) => {
+  activeDynasty.value = activeDynasty.value === name ? null : name
+  // 朝代变化时：重新加载分类数量 + 精选推荐
+  await Promise.all([loadCategories(), loadFeatured()])
+}
+
+const onCategoryClick = (key: string) => {
+  activeCategory.value = activeCategory.value === key ? null : key
+  loadFeatured()
+}
+
+// ── 生命周期：keep-alive 优化 ──
+onMounted(async () => {
+  loading.value = true
+  await Promise.all([loadBaseData(), loadFeatured()])
+  loading.value = false
+})
+
+// keep-alive 重新激活时：如果数据超过 5 分钟未刷新则重新加载
+let lastLoadTime = Date.now()
+const STALE_THRESHOLD = 5 * 60 * 1000 // 5 分钟
+
+onActivated(async () => {
+  if (dataLoaded && Date.now() - lastLoadTime < STALE_THRESHOLD) {
+    return // 数据新鲜，跳过
+  }
+  await loadBaseData()
+  lastLoadTime = Date.now()
+})
+
+onDeactivated(() => {
+  lastLoadTime = Date.now()
 })
 </script>
 
@@ -526,9 +654,11 @@ onMounted(async () => {
       white-space: nowrap;
     }
 
-    .node-count {
+    .node-year {
       font-size: 10px;
       color: var(--text-tertiary);
+      font-family: var(--font-mono, monospace);
+      white-space: nowrap;
     }
   }
 
@@ -820,8 +950,71 @@ onMounted(async () => {
     }
   }
 
-  // ── 关联图谱 ──
-  .graph-list {
+  .featured-loading {
+      display: flex;
+      justify-content: center;
+      gap: 6px;
+      padding: var(--space-xl);
+
+      .loading-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--cinnabar);
+        animation: bounce 1.4s infinite ease-in-out;
+        &:nth-child(2) { animation-delay: 0.2s; }
+        &:nth-child(3) { animation-delay: 0.4s; }
+      }
+    }
+
+    .featured-empty {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: var(--space-sm);
+      padding: var(--space-xl);
+      color: var(--text-tertiary);
+      font-size: 13px;
+
+      .reset-btn {
+        all: unset;
+        font-size: 12px;
+        padding: 4px 16px;
+        border-radius: var(--radius-md);
+        border: 1px solid var(--border-color);
+        color: var(--cinnabar);
+        cursor: pointer;
+        transition: all var(--transition-fast);
+
+        &:hover {
+          background: var(--cinnabar);
+          color: #fff;
+          border-color: var(--cinnabar);
+        }
+      }
+    }
+
+    // ── 关联图谱 ──
+  .graph-canvas {
+      display: flex;
+      justify-content: center;
+      margin-bottom: var(--space-md);
+
+      .graph-node {
+        cursor: pointer;
+
+        // hover 时放大圆环（用 SVG 属性而非 CSS transform，避免与 translate 冲突）
+        &:hover .node-bg {
+          opacity: 0.25;
+        }
+        &:hover .node-ring {
+          stroke-width: 2;
+          opacity: 0.7;
+        }
+      }
+    }
+
+    .graph-list {
     display: flex;
     flex-direction: column;
     gap: 6px;

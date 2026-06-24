@@ -198,7 +198,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, onActivated, onDeactivated } from 'vue'
 import { useRouter } from 'vue-router'
 import request from '@/utils/request'
 
@@ -353,17 +353,43 @@ const loadData = async (silent = false) => {
   }
 }
 
-onMounted(() => {
-  loadData()
-  // 定时自动刷新（静默模式，不显示 loading）
-  refreshTimer = setInterval(() => loadData(true), REFRESH_INTERVAL * 1000)
-})
+// ── 生命周期：keep-alive 优化 ──
+// keep-alive 下 onMounted 只执行一次，onActivated 每次切回页面时执行
+let lastRefreshTime = Date.now()
 
-onUnmounted(() => {
+const startAutoRefresh = () => {
+  if (refreshTimer) return
+  refreshTimer = setInterval(() => loadData(true), REFRESH_INTERVAL * 1000)
+}
+
+const stopAutoRefresh = () => {
   if (refreshTimer) {
     clearInterval(refreshTimer)
     refreshTimer = null
   }
+}
+
+onMounted(() => {
+  loadData()
+  startAutoRefresh()
+})
+
+// 切回页面时：如果数据超过 2 分钟未刷新，立即静默刷新
+onActivated(() => {
+  if (Date.now() - lastRefreshTime > 2 * 60 * 1000) {
+    loadData(true)
+  }
+  startAutoRefresh()
+})
+
+// 切离页面时：暂停定时器，避免后台无效请求
+onDeactivated(() => {
+  lastRefreshTime = Date.now()
+  stopAutoRefresh()
+})
+
+onUnmounted(() => {
+  stopAutoRefresh()
 })
 </script>
 
