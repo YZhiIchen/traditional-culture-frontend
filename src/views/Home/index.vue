@@ -180,7 +180,7 @@
           <div class="section-body">
             <div class="tag-cloud">
               <span class="cloud-tag" v-for="tag in hotTags" :key="tag.name"
-                    :style="{ fontSize: `${tag.size}px`, opacity: tag.opacity }"
+                    :style="{ fontSize: `${tag.size}px`, opacity: tag.opacity, color: tag.color }"
                     @click="goSearch(tag.name)">
                 {{ tag.name }}
               </span>
@@ -278,7 +278,8 @@ interface RecentItem {
 const recentList = ref<RecentItem[]>([])
 
 // ── 热门标签 ──
-const hotTags = ref<{ name: string; size: number; opacity: number }[]>([])
+const hotTags = ref<{ name: string; size: number; opacity: number; color: string }[]>([])
+const tagColorPool = ['var(--celadon)', 'var(--vermillion)', 'var(--gold)', 'var(--azure)', 'var(--cinnabar)']
 
 // ── 朝代分布 ──
 const dynasties = ref<{ name: string; count: number; pct: number }[]>([])
@@ -350,10 +351,11 @@ const loadData = async (silent = false) => {
     const tags: any[] = tagsRes || []
     if (tags.length) {
       const maxCount = Math.max(...tags.map((t: any) => t.count), 1)
-      hotTags.value = tags.slice(0, 15).map((t: any) => ({
+      hotTags.value = tags.slice(0, 15).map((t: any, i: number) => ({
         name: t.name,
         size: 12 + Math.round((t.count / maxCount) * 8),
-        opacity: 0.6 + (t.count / maxCount) * 0.35
+        opacity: 0.6 + (t.count / maxCount) * 0.35,
+        color: tagColorPool[i % tagColorPool.length]
       }))
     }
 
@@ -944,14 +946,14 @@ onUnmounted(() => {
 
     .cloud-tag {
       cursor: pointer;
-      color: var(--text-secondary);
       transition: all var(--transition-fast);
-      font-weight: 450;
+      font-weight: 500;
       padding: 2px 4px;
       border-radius: 3px;
+      line-height: 1.2;
 
       &:hover {
-        color: var(--cinnabar);
+        transform: scale(1.15);
         background: oklch(50% 0.16 28 / 0.06);
       }
     }
