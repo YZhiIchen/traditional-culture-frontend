@@ -1,20 +1,26 @@
 <template>
   <div class="explore">
-    <!-- 页面标识 -->
-    <div class="page-lead animate-fade-in-up">
-      <div class="lead-badge">
-        <span class="badge-line" />
-        <span class="badge-text">发现 · 探索</span>
-        <span class="badge-line" />
+    <!-- Hero 区域 -->
+    <div class="hero-section animate-fade-in-up">
+      <div class="hero-visual">
+        <img src="/images/bg-explore.jpg" alt="古籍" class="hero-image" />
+        <div class="hero-overlay" />
       </div>
-      <h1 class="lead-title">知识发现</h1>
-      <p class="lead-desc">
-        浏览传统文化数字馆藏，沿时间脉络与分类主题自由探索
-      </p>
+      <div class="hero-content">
+        <div class="lead-badge">
+          <span class="badge-line" />
+          <span class="badge-text">发现 · 探索</span>
+          <span class="badge-line" />
+        </div>
+        <h1 class="hero-title">知识发现</h1>
+        <p class="hero-desc">
+          浏览传统文化数字馆藏，沿时间脉络与分类主题自由探索
+        </p>
+      </div>
     </div>
 
     <!-- 朝代时间线 -->
-    <section class="timeline-section animate-fade-in-up delay-1">
+    <section class="timeline-section" v-reveal="{ delay: 80 }">
       <div class="section-label">
         <span class="label-dot">◆</span>
         朝代时间轴
@@ -37,7 +43,7 @@
     <!-- 主区域 -->
     <div class="explore-grid">
       <!-- 左栏：分类浏览 -->
-      <div class="grid-primary animate-fade-in-up delay-2">
+      <div class="grid-primary" v-reveal="{ delay: 160 }">
         <!-- 分类标签 -->
         <div class="section-label">
           <span class="label-dot">◆</span>
@@ -91,13 +97,14 @@
           <div
             v-for="(item, idx) in allFeatured"
             :key="item.id"
-            class="featured-card animate-fade-in-up"
-            :style="{ animationDelay: `${0.06 * idx}s` }"
+            class="featured-card"
+            v-reveal="{ delay: 60 * idx }"
             @click="goDetail(item.id)"
           >
             <div class="featured-visual">
-              <div class="visual-placeholder" :style="{ background: item.bg }">
-                <div v-html="item.visual" />
+              <div class="visual-media" :style="{ background: item.bg }">
+                <img v-if="item.image" :src="item.image" :alt="item.title" class="media-img" />
+                <div v-else class="media-fallback" v-html="item.visual" />
               </div>
               <div class="visual-badge" :style="{ color: item.accent }">
                 {{ item.category }}
@@ -123,7 +130,7 @@
       </div>
 
       <!-- 右栏：知识图谱简化版 -->
-      <aside class="grid-aside animate-fade-in-up delay-3">
+      <aside class="grid-aside" v-reveal="{ delay: 240 }">
         <!-- 文化词云 -->
         <section class="section-card">
           <div class="section-head">
@@ -294,6 +301,7 @@ interface FeaturedItem {
   bg: string
   accent: string
   visual: string
+  image?: string
 }
 
 const allFeatured = ref<FeaturedItem[]>([])
@@ -386,6 +394,12 @@ const loadFeatured = async () => {
       }
       const defaultStyle = { bg: 'linear-gradient(135deg, oklch(85% 0.02 55 / 0.3), oklch(75% 0.03 40 / 0.2))', accent: 'var(--cinnabar)' }
 
+      const categoryImages: Record<string, string> = {
+        '绘画': '/images/painting-scroll.jpg',
+        '书法': '/images/bg-explore.jpg',
+        '器物': '/images/artifacts.jpg',
+      }
+
       allFeatured.value = recommend.map((r: any) => {
         const style = categoryColors[r.category] || defaultStyle
         return {
@@ -397,6 +411,7 @@ const loadFeatured = async () => {
           category: r.category,
           bg: style.bg,
           accent: style.accent,
+          image: r.image || categoryImages[r.category],
           visual: '<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>'
         }
       })
@@ -514,42 +529,102 @@ onDeactivated(() => {
 // ═══════════════════════════════════════════
 
 .explore {
-  .page-lead {
-    margin-bottom: var(--space-lg);
+  // ── Hero 区域 ──
+  .hero-section {
+    position: relative;
+    margin: calc(var(--space-xl) * -1) calc(var(--space-2xl) * -1) var(--space-xl);
+    min-height: 260px;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    border-radius: 0 0 var(--radius-xl) var(--radius-xl);
+
+    @media (max-width: 768px) {
+      margin: calc(var(--space-md) * -1) calc(var(--space-md) * -1) var(--space-lg);
+      min-height: 220px;
+    }
+  }
+
+  .hero-visual {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+
+    .hero-image {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center 40%;
+    }
+
+    .hero-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(
+        90deg,
+        oklch(12% 0.02 55 / 0.8) 0%,
+        oklch(12% 0.02 55 / 0.5) 50%,
+        oklch(12% 0.02 55 / 0.2) 100%
+      );
+
+      [data-theme='dark'] & {
+        background: linear-gradient(
+          90deg,
+          oklch(8% 0.01 55 / 0.9) 0%,
+          oklch(8% 0.01 55 / 0.6) 50%,
+          oklch(8% 0.01 55 / 0.3) 100%
+        );
+      }
+    }
+  }
+
+  .hero-content {
+    position: relative;
+    z-index: 1;
+    padding: var(--space-2xl) var(--space-2xl);
+    max-width: 600px;
+
+    @media (max-width: 768px) {
+      padding: var(--space-xl) var(--space-lg);
+    }
 
     .lead-badge {
       display: flex;
       align-items: center;
       gap: 8px;
-      margin-bottom: 8px;
+      margin-bottom: 12px;
 
       .badge-line {
         width: 20px;
         height: 1px;
-        background: var(--cinnabar);
-        opacity: 0.3;
+        background: var(--gold);
+        opacity: 0.5;
       }
 
       .badge-text {
         font-size: 11px;
-        color: var(--cinnabar);
+        color: var(--gold);
         letter-spacing: 3px;
-        opacity: 0.7;
+        text-transform: uppercase;
+        opacity: 0.9;
       }
     }
 
-    .lead-title {
+    .hero-title {
       font-family: var(--font-heading);
-      font-size: clamp(22px, 3vw, 28px);
+      font-size: clamp(26px, 4vw, 36px);
       font-weight: 700;
-      color: var(--text-primary);
-      letter-spacing: 4px;
+      color: #fff;
+      letter-spacing: 6px;
+      text-shadow: 0 2px 12px oklch(12% 0.02 55 / 0.3);
+      margin-bottom: 8px;
     }
 
-    .lead-desc {
-      margin-top: 6px;
-      font-size: 13px;
-      color: var(--text-secondary);
+    .hero-desc {
+      font-size: 14px;
+      color: oklch(90% 0.005 55 / 0.85);
+      max-width: 440px;
+      line-height: 1.7;
     }
   }
 
@@ -825,16 +900,30 @@ onDeactivated(() => {
 
   .featured-visual {
     position: relative;
-    height: 100px;
+    height: 140px;
     overflow: hidden;
 
-    .visual-placeholder {
+    .visual-media {
       width: 100%;
       height: 100%;
       display: flex;
       align-items: center;
       justify-content: center;
       transition: transform var(--transition-slow);
+      position: relative;
+
+      .media-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform var(--transition-slow);
+      }
+
+      .media-fallback {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
     }
 
     .visual-badge {
@@ -846,7 +935,12 @@ onDeactivated(() => {
       border-radius: var(--radius-full);
       background: var(--bg-card);
       font-weight: 500;
+      z-index: 1;
     }
+  }
+
+  .featured-card:hover .visual-media .media-img {
+    transform: scale(1.05);
   }
 
   .featured-body {

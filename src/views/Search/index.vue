@@ -1,7 +1,7 @@
 <template>
   <div class="search">
     <!-- 页面标识 -->
-    <div class="page-lead animate-fade-in-up">
+    <div class="page-lead" v-reveal="{ delay: 80 }">
       <div class="lead-badge">
         <span class="badge-line" />
         <span class="badge-text">资源 · 检索</span>
@@ -14,7 +14,7 @@
     </div>
 
     <!-- 搜索输入区（非对称） -->
-    <div class="search-bar animate-fade-in-up delay-1">
+    <div class="search-bar" v-reveal="{ delay: 160 }">
       <div class="search-field">
         <span class="search-icon">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
@@ -47,7 +47,7 @@
     </div>
 
     <!-- 结果区域 -->
-    <div v-if="hasSearched" class="result-area animate-fade-in-up delay-2">
+    <div v-if="hasSearched" class="result-area" v-reveal="{ delay: 200 }">
       <!-- 无结果 -->
       <div v-if="!searching && items.length === 0" class="result-empty">
         <div class="empty-visual">
@@ -113,13 +113,12 @@
     </div>
 
     <!-- 初次进入引导 -->
-    <div v-else class="search-guide animate-fade-in delay-3">
+    <div v-else class="search-guide" v-reveal="{ delay: 240 }">
+      <div class="guide-visual">
+        <img src="/images/artifacts.jpg" alt="文物" class="guide-image" />
+        <div class="guide-image-overlay" />
+      </div>
       <div class="guide-lines">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
-             stroke="currentColor" stroke-width="0.8" opacity="0.15">
-          <circle cx="11" cy="11" r="8" />
-          <line x1="21" y1="21" x2="16.65" y2="16.65" />
-        </svg>
         <p>输入关键词开始探索</p>
         <p class="guide-suggest">试试：唐诗 · 宋词 · 山水 · 书法 · 古籍</p>
       </div>
@@ -198,49 +197,6 @@ const goDetail = (item: ResultItem) => {
 // ═══════════════════════════════════════════
 
 .search {
-  // ── 页面引导 ──
-  .page-lead {
-    margin-bottom: var(--space-lg);
-
-    .lead-badge {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-bottom: 8px;
-
-      .badge-line {
-        width: 20px;
-        height: 1px;
-        background: var(--cinnabar);
-        opacity: 0.3;
-      }
-
-      .badge-text {
-        font-size: 11px;
-        color: var(--cinnabar);
-        letter-spacing: 3px;
-        text-transform: uppercase;
-        opacity: 0.7;
-      }
-    }
-
-    .lead-title {
-      font-family: var(--font-heading);
-      font-size: clamp(22px, 3vw, 28px);
-      font-weight: 700;
-      color: var(--text-primary);
-      letter-spacing: 4px;
-    }
-
-    .lead-desc {
-      margin-top: 6px;
-      font-size: 13px;
-      color: var(--text-secondary);
-      max-width: 480px;
-      line-height: 1.6;
-    }
-  }
-
   // ── 搜索条 ──
   .search-bar {
     margin-bottom: var(--space-xl);
@@ -485,7 +441,33 @@ const goDetail = (item: ResultItem) => {
   // ── 初次引导 ──
   .search-guide {
     text-align: center;
-    padding: var(--space-4xl) 0;
+    padding: var(--space-2xl) 0;
+
+    .guide-visual {
+      position: relative;
+      width: 280px;
+      height: 180px;
+      margin: 0 auto var(--space-xl);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      box-shadow: var(--shadow-md);
+
+      .guide-image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .guide-image-overlay {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(
+          to bottom,
+          transparent 40%,
+          var(--bg-body) 100%
+        );
+      }
+    }
 
     .guide-lines {
       display: flex;
@@ -510,19 +492,6 @@ const goDetail = (item: ResultItem) => {
   // 移动端适配
   // ═══════════════════════════════════════
   @media (max-width: 768px) {
-    .page-lead {
-      margin-bottom: var(--space-md);
-
-      .lead-title {
-        font-size: 22px;
-        letter-spacing: 2px;
-      }
-
-      .lead-desc {
-        font-size: 12px;
-      }
-    }
-
     .search-bar {
       margin-bottom: var(--space-lg);
     }

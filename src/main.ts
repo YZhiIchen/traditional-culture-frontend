@@ -17,6 +17,36 @@ for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
   app.component(key, component)
 }
 
+// ── 全局滚动显示指令 ──
+app.directive('reveal', {
+  mounted(el, binding) {
+    const opts = binding.value || {}
+    const threshold = opts.threshold || 0.1
+    const rootMargin = opts.rootMargin || '0px 0px -40px 0px'
+    const delay = opts.delay || 0
+
+    el.style.transitionDelay = `${delay}ms`
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            el.classList.add('is-visible')
+            observer.unobserve(el)
+          }
+        })
+      },
+      { threshold, rootMargin }
+    )
+    observer.observe(el)
+    ;(el as any).__revealObserver = observer
+  },
+  unmounted(el) {
+    const observer = (el as any).__revealObserver
+    if (observer) observer.disconnect()
+  }
+})
+
 app.use(pinia)
 app.use(router)
 app.use(ElementPlus)

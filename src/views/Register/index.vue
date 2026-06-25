@@ -224,22 +224,26 @@ const handleRegister = async () => {
   justify-content: center;
   position: relative;
   overflow: hidden;
-  background: linear-gradient(
-    180deg,
-    oklch(92% 0.015 75) 0%,
-    oklch(88% 0.01 60) 35%,
-    oklch(82% 0.008 50) 65%,
-    oklch(16% 0.03 30) 100%
-  );
+  background:
+    linear-gradient(
+      180deg,
+      oklch(92% 0.015 75 / 0.92) 0%,
+      oklch(88% 0.01 60 / 0.92) 35%,
+      oklch(82% 0.008 50 / 0.92) 65%,
+      oklch(16% 0.03 30 / 0.95) 100%
+    ),
+    url('/images/hero-home.jpg') center bottom / cover no-repeat;
 }
 
 [data-theme='dark'] .register {
-  background: linear-gradient(
-    180deg,
-    oklch(12% 0.005 55) 0%,
-    oklch(10% 0.01 40) 50%,
-    oklch(8% 0.015 30) 100%
-  );
+  background:
+    linear-gradient(
+      180deg,
+      oklch(12% 0.005 55 / 0.92) 0%,
+      oklch(10% 0.01 40 / 0.92) 50%,
+      oklch(8% 0.015 30 / 0.95) 100%
+    ),
+    url('/images/hero-home.jpg') center bottom / cover no-repeat;
 }
 
 .reg-atmosphere {

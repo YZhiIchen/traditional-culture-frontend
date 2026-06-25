@@ -1,20 +1,39 @@
 <template>
   <div class="home">
-    <!-- 页面标识 -->
-    <div class="page-lead animate-fade-in-up">
-      <div class="lead-badge">
-        <span class="badge-line" />
-        <span class="badge-text">工作台</span>
-        <span class="badge-line" />
+    <!-- Hero 区域 -->
+    <div class="hero-section animate-fade-in-up">
+      <div class="hero-visual">
+        <img src="/images/hero-home.jpg" alt="山水" class="hero-image" />
+        <div class="hero-overlay" />
       </div>
-      <h1 class="lead-title">数字化保护工作台</h1>
-      <p class="lead-desc">
-        传统文化资源采集、识别、检索与研究的一站式入口
-      </p>
+      <div class="hero-content">
+        <div class="lead-badge">
+          <span class="badge-line" />
+          <span class="badge-text">工作台</span>
+          <span class="badge-line" />
+        </div>
+        <h1 class="hero-title">数字化保护工作台</h1>
+        <p class="hero-desc">
+          传统文化资源采集、识别、检索与研究的一站式入口
+        </p>
+        <div class="hero-actions">
+          <router-link to="/upload" class="hero-btn hero-btn-primary">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="17 8 12 3 7 8" />
+              <line x1="12" y1="3" x2="12" y2="15" />
+            </svg>
+            上传资源
+          </router-link>
+          <router-link to="/explore" class="hero-btn hero-btn-ghost">
+            探索发现
+          </router-link>
+        </div>
+      </div>
     </div>
 
     <!-- 统计卡片 -->
-    <div class="stats-row animate-fade-in-up delay-1">
+    <div class="stats-row" v-reveal="{ delay: 80 }">
       <div class="stat-card" v-for="(card, i) in statCards" :key="i"
            :style="{ animationDelay: `${0.05 * i}s` }">
         <div class="stat-icon" :style="{ background: card.bg }">
@@ -34,7 +53,7 @@
     </div>
 
     <!-- 自动刷新指示 -->
-    <div class="refresh-bar animate-fade-in">
+    <div class="refresh-bar" v-reveal="{ delay: 120 }">
       <span class="refresh-dot" :class="{ active: refreshing }" />
       <span class="refresh-text">
         {{ refreshing ? '正在更新…' : `数据每 ${REFRESH_INTERVAL}s 自动刷新` }}
@@ -45,7 +64,7 @@
     <!-- 主区域：双栏 -->
     <div class="home-grid">
       <!-- 左栏：最近活动 -->
-      <div class="grid-main animate-fade-in-up delay-2">
+      <div class="grid-main" v-reveal="{ delay: 160 }">
         <section class="section-card">
           <div class="section-head">
             <span class="section-head-title">系统最近识别</span>
@@ -129,7 +148,7 @@
       </div>
 
       <!-- 右栏：侧边信息 -->
-      <aside class="grid-aside animate-fade-in-up delay-3">
+      <aside class="grid-aside" v-reveal="{ delay: 240 }">
         <!-- 今日统计 -->
         <section class="section-card">
           <div class="section-head">
@@ -399,45 +418,147 @@ onUnmounted(() => {
 // ═══════════════════════════════════════════
 
 .home {
-  .page-lead {
-    margin-bottom: var(--space-lg);
+  // ── Hero 区域 ──
+  .hero-section {
+    position: relative;
+    margin: calc(var(--space-xl) * -1) calc(var(--space-2xl) * -1) var(--space-xl);
+    margin-right: calc(var(--space-2xl) * -1);
+    min-height: 320px;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    border-radius: 0 0 var(--radius-xl) var(--radius-xl);
+
+    @media (max-width: 768px) {
+      margin: calc(var(--space-md) * -1) calc(var(--space-md) * -1) var(--space-lg);
+      min-height: 260px;
+    }
+  }
+
+  .hero-visual {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+
+    .hero-image {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center 30%;
+    }
+
+    .hero-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(
+        90deg,
+        oklch(12% 0.02 55 / 0.75) 0%,
+        oklch(12% 0.02 55 / 0.45) 50%,
+        oklch(12% 0.02 55 / 0.15) 100%
+      );
+
+      [data-theme='dark'] & {
+        background: linear-gradient(
+          90deg,
+          oklch(8% 0.01 55 / 0.85) 0%,
+          oklch(8% 0.01 55 / 0.55) 50%,
+          oklch(8% 0.01 55 / 0.25) 100%
+        );
+      }
+    }
+  }
+
+  .hero-content {
+    position: relative;
+    z-index: 1;
+    padding: var(--space-2xl) var(--space-2xl);
+    max-width: 600px;
+
+    @media (max-width: 768px) {
+      padding: var(--space-xl) var(--space-lg);
+    }
 
     .lead-badge {
       display: flex;
       align-items: center;
       gap: 8px;
-      margin-bottom: 8px;
+      margin-bottom: 12px;
 
       .badge-line {
         width: 20px;
         height: 1px;
-        background: var(--cinnabar);
-        opacity: 0.3;
+        background: var(--gold);
+        opacity: 0.5;
       }
 
       .badge-text {
         font-size: 11px;
-        color: var(--cinnabar);
+        color: var(--gold);
         letter-spacing: 3px;
         text-transform: uppercase;
-        opacity: 0.7;
+        opacity: 0.9;
       }
     }
 
-    .lead-title {
+    .hero-title {
       font-family: var(--font-heading);
-      font-size: clamp(22px, 3vw, 28px);
+      font-size: clamp(26px, 4vw, 36px);
       font-weight: 700;
-      color: var(--text-primary);
-      letter-spacing: 4px;
+      color: #fff;
+      letter-spacing: 6px;
+      text-shadow: 0 2px 12px oklch(12% 0.02 55 / 0.3);
+      margin-bottom: 8px;
     }
 
-    .lead-desc {
-      margin-top: 6px;
-      font-size: 13px;
-      color: var(--text-secondary);
-      max-width: 480px;
-      line-height: 1.6;
+    .hero-desc {
+      font-size: 14px;
+      color: oklch(90% 0.005 55 / 0.85);
+      max-width: 440px;
+      line-height: 1.7;
+      margin-bottom: var(--space-lg);
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: var(--space-md);
+      flex-wrap: wrap;
+
+      .hero-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 0 24px;
+        height: 46px;
+        font-size: 14px;
+        letter-spacing: 2px;
+        border-radius: var(--radius-md);
+        text-decoration: none;
+        transition: all var(--transition-fast);
+        font-family: var(--font-heading);
+
+        &-primary {
+          background: linear-gradient(135deg, var(--cinnabar), oklch(42% 0.14 28));
+          color: #fff;
+          box-shadow: 0 4px 16px oklch(12% 0.02 55 / 0.3);
+
+          &:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 24px oklch(12% 0.02 55 / 0.4);
+          }
+        }
+
+        &-ghost {
+          background: oklch(95% 0.005 55 / 0.12);
+          color: #fff;
+          border: 1px solid oklch(95% 0.005 55 / 0.25);
+          backdrop-filter: blur(8px);
+
+          &:hover {
+            background: oklch(95% 0.005 55 / 0.2);
+            transform: translateY(-2px);
+          }
+        }
+      }
     }
   }
 
@@ -904,16 +1025,26 @@ onUnmounted(() => {
   // 移动端适配
   // ═══════════════════════════════════════
   @media (max-width: 768px) {
-    .page-lead {
-      margin-bottom: var(--space-md);
+    .hero-section {
+      min-height: 240px;
+    }
 
-      .lead-title {
-        font-size: 22px;
-        letter-spacing: 2px;
+    .hero-content {
+      .hero-title {
+        font-size: 24px;
+        letter-spacing: 3px;
       }
 
-      .lead-desc {
-        font-size: 12px;
+      .hero-desc {
+        font-size: 13px;
+      }
+
+      .hero-actions {
+        .hero-btn {
+          height: 40px;
+          padding: 0 18px;
+          font-size: 13px;
+        }
       }
     }
 

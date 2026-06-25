@@ -1,21 +1,20 @@
 <template>
   <div class="detail">
-    <!-- 页面标识 + 返回按钮（全局左上角） -->
-    <div class="page-lead animate-fade-in-up">
-      <div class="lead-badge">
-        <span class="badge-line" />
-        <span class="badge-text">识别 · 详情</span>
-        <span class="badge-line" />
-      </div>
-      <div class="lead-row">
-        <div>
-          <h1 class="lead-title">识别结果详情</h1>
-          <p class="lead-desc">
-            查看文件的智能识别产出与结构化元数据
-          </p>
+    <!-- Hero -->
+    <div class="page-hero" v-reveal="{ delay: 0 }">
+      <img src="/images/artifacts.jpg" alt="" class="page-hero-bg" />
+      <div class="page-hero-overlay" />
+      <div class="page-hero-content">
+        <div class="hero-badge">
+          <span class="hero-badge-line" />
+          <span class="hero-badge-text">识别 · 详情</span>
+          <span class="hero-badge-line" />
         </div>
-        <div class="lead-actions">
-          <!-- 返回按钮移至顶部操作栏 -->
+        <h1 class="hero-title">识别结果详情</h1>
+        <p class="hero-desc">
+          查看文件的智能识别产出与结构化元数据
+        </p>
+        <div class="hero-actions">
           <button class="ghost-btn back-top-btn" @click="goBack">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
                  stroke="currentColor" stroke-width="2" stroke-linecap="round"
@@ -351,53 +350,6 @@ onMounted(() => fetchData())
 // 当代山水 · 识别详情
 // ═══════════════════════════════════════════
 .detail {
-  // ── 页面引导 ──
-  .page-lead {
-    margin-bottom: var(--space-xl);
-    .lead-badge {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-bottom: 8px;
-      .badge-line {
-        width: 20px;
-        height: 1px;
-        background: var(--cinnabar);
-        opacity: 0.3;
-      }
-      .badge-text {
-        font-size: 11px;
-        color: var(--cinnabar);
-        letter-spacing: 3px;
-        text-transform: uppercase;
-        opacity: 0.7;
-      }
-    }
-    .lead-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      gap: var(--space-md);
-      flex-wrap: wrap;
-    }
-    .lead-title {
-      font-family: var(--font-heading);
-      font-size: clamp(22px, 3vw, 28px);
-      font-weight: 700;
-      color: var(--text-primary);
-      letter-spacing: 4px;
-    }
-    .lead-desc {
-      margin-top: 6px;
-      font-size: 13px;
-      color: var(--text-secondary);
-    }
-    .lead-actions {
-      display: flex;
-      gap: 8px;
-      flex-shrink: 0;
-    }
-  }
   .ghost-btn {
     all: unset;
     display: inline-flex;

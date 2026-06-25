@@ -1,35 +1,24 @@
 <template>
   <div class="history">
-    <!-- 页面标识 -->
-    <div class="page-lead animate-fade-in-up">
-      <div class="lead-badge">
-        <span class="badge-line" />
-        <span class="badge-text">我的 · 记录</span>
-        <span class="badge-line" />
-      </div>
-      <div class="lead-row">
-        <div>
-          <h1 class="lead-title">识别历史</h1>
-          <p class="lead-desc">
-            浏览和管理您的所有资源识别与结构化处理记录
-          </p>
+    <!-- Hero -->
+    <div class="page-hero" v-reveal="{ delay: 0 }">
+      <img src="/images/bg-history.jpg" alt="" class="page-hero-bg" />
+      <div class="page-hero-overlay" />
+      <div class="page-hero-content">
+        <div class="hero-badge">
+          <span class="hero-badge-line" />
+          <span class="hero-badge-text">我的 · 记录</span>
+          <span class="hero-badge-line" />
         </div>
-        <div class="lead-actions">
-          <button class="ghost-btn" @click="handleRefresh">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
-                 stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
-                 stroke-linejoin="round">
-              <polyline points="23 4 23 10 17 10" />
-              <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
-            </svg>
-            刷新
-          </button>
-        </div>
+        <h1 class="hero-title">识别历史</h1>
+        <p class="hero-desc">
+          浏览和管理您的所有资源识别与结构化处理记录
+        </p>
       </div>
     </div>
 
     <!-- 筛选栏 -->
-    <div class="filter-bar animate-fade-in-up delay-1">
+    <div class="filter-bar" v-reveal="{ delay: 80 }">
       <div class="filter-group">
         <button
           v-for="tab in typeFilter"
@@ -213,14 +202,11 @@
     </div>
 
     <!-- 空态 -->
-    <div v-if="!loading && filteredList.length === 0" class="empty-state animate-fade-in">
-      <svg width="56" height="56" viewBox="0 0 24 24" fill="none"
-           stroke="currentColor" stroke-width="0.7" opacity="0.15">
-        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-        <polyline points="14 2 14 8 20 8" />
-        <line x1="16" y1="13" x2="8" y2="13" />
-        <line x1="16" y1="17" x2="8" y2="17" />
-      </svg>
+    <div v-if="!loading && filteredList.length === 0" class="empty-state" v-reveal="{ delay: 160 }">
+      <div class="empty-visual">
+        <img src="/images/painting-scroll.jpg" alt="" class="empty-img" />
+        <div class="empty-img-overlay" />
+      </div>
       <p class="empty-title">{{ searchKeyword ? '无匹配记录' : '暂无识别记录' }}</p>
       <p class="empty-hint">
         {{ searchKeyword ? '试试其他关键词' : '上传资源后自动生成识别记录' }}
@@ -440,58 +426,6 @@ watch([page, activeType], () => {
 // ═══════════════════════════════════════════
 
 .history {
-  .page-lead {
-    margin-bottom: var(--space-lg);
-
-    .lead-badge {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-bottom: 8px;
-
-      .badge-line {
-        width: 20px;
-        height: 1px;
-        background: var(--cinnabar);
-        opacity: 0.3;
-      }
-
-      .badge-text {
-        font-size: 11px;
-        color: var(--cinnabar);
-        letter-spacing: 3px;
-        text-transform: uppercase;
-        opacity: 0.7;
-      }
-    }
-
-    .lead-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      gap: var(--space-md);
-    }
-
-    .lead-title {
-      font-family: var(--font-heading);
-      font-size: clamp(22px, 3vw, 28px);
-      font-weight: 700;
-      color: var(--text-primary);
-      letter-spacing: 4px;
-    }
-
-    .lead-desc {
-      margin-top: 6px;
-      font-size: 13px;
-      color: var(--text-secondary);
-    }
-
-    .lead-actions {
-      display: flex;
-      gap: 8px;
-    }
-  }
-
   .ghost-btn {
     all: unset;
     display: inline-flex;
@@ -855,7 +789,33 @@ watch([page, activeType], () => {
   // ── 空态 ──
   .empty-state {
     text-align: center;
-    padding: var(--space-3xl) 0;
+    padding: var(--space-xl) 0 var(--space-3xl);
+
+    .empty-visual {
+      position: relative;
+      width: 240px;
+      height: 160px;
+      margin: 0 auto var(--space-xl);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      box-shadow: var(--shadow-md);
+
+      .empty-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .empty-img-overlay {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(
+          to bottom,
+          transparent 40%,
+          var(--bg-body) 100%
+        );
+      }
+    }
 
     .empty-title {
       font-size: 16px;

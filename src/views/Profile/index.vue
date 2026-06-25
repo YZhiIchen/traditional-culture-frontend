@@ -1,20 +1,24 @@
 <template>
   <div class="profile">
-    <!-- 页面标识 -->
-    <div class="page-lead animate-fade-in-up">
-      <div class="lead-badge">
-        <span class="badge-line" />
-        <span class="badge-text">个人中心</span>
-        <span class="badge-line" />
+    <!-- Hero -->
+    <div class="page-hero" v-reveal="{ delay: 0 }">
+      <img src="/images/bg-profile.jpg" alt="" class="page-hero-bg" />
+      <div class="page-hero-overlay" />
+      <div class="page-hero-content">
+        <div class="hero-badge">
+          <span class="hero-badge-line" />
+          <span class="hero-badge-text">个人中心</span>
+          <span class="hero-badge-line" />
+        </div>
+        <h1 class="hero-title">个人信息</h1>
+        <p class="hero-desc">管理你的账户信息与偏好设置</p>
       </div>
-      <h1 class="lead-title">个人信息</h1>
-      <p class="lead-desc">管理你的账户信息与偏好设置</p>
     </div>
 
     <!-- 非对称双栏 -->
     <div class="profile-grid">
       <!-- 左栏：用户头像 + 概览 -->
-      <div class="profile-aside animate-fade-in-up delay-1">
+      <div class="profile-aside" v-reveal="{ delay: 80 }">
         <div class="avatar-card">
         <div class="avatar-box">
           <div class="avatar-wrap">
@@ -691,35 +695,6 @@ const handleDeleteAccount = async () => {
 // ═══════════════════════════════════════════
 
 .profile {
-  // ── 页面引导 ──
-  .page-lead {
-    margin-bottom: var(--space-xl);
-
-    .lead-badge {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-bottom: 8px;
-
-      .badge-line { width: 20px; height: 1px; background: var(--cinnabar); opacity: 0.3; }
-      .badge-text { font-size: 11px; color: var(--cinnabar); letter-spacing: 3px; opacity: 0.7; }
-    }
-
-    .lead-title {
-      font-family: var(--font-heading);
-      font-size: clamp(22px, 3vw, 28px);
-      font-weight: 700;
-      color: var(--text-primary);
-      letter-spacing: 4px;
-    }
-
-    .lead-desc {
-      margin-top: 6px;
-      font-size: 13px;
-      color: var(--text-secondary);
-    }
-  }
-
   // ── 网格 ──
   .profile-grid {
     display: grid;

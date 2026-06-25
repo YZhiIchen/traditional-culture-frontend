@@ -1,13 +1,17 @@
 <template>
   <div class="favorites">
-    <div class="page-lead animate-fade-in-up">
-      <div class="lead-badge">
-        <span class="badge-line" />
-        <span class="badge-text">我的 · 收藏</span>
-        <span class="badge-line" />
+    <div class="page-hero" v-reveal="{ delay: 0 }">
+      <img src="/images/bg-favorites.jpg" alt="" class="page-hero-bg" />
+      <div class="page-hero-overlay" />
+      <div class="page-hero-content">
+        <div class="hero-badge">
+          <span class="hero-badge-line" />
+          <span class="hero-badge-text">我的 · 收藏</span>
+          <span class="hero-badge-line" />
+        </div>
+        <h1 class="hero-title">我的收藏</h1>
+        <p class="hero-desc">收藏感兴趣的传统文化资源</p>
       </div>
-      <h1 class="lead-title">我的收藏</h1>
-      <p class="lead-desc">收藏感兴趣的传统文化资源</p>
     </div>
 
     <!-- 批量操作 -->
@@ -19,7 +23,11 @@
 
     <div v-if="loading" class="skeleton-area"><div class="skeleton-row" v-for="n in 3" :key="n" /></div>
 
-    <div v-else-if="list.length === 0" class="empty-state">
+    <div v-else-if="list.length === 0" class="empty-state" v-reveal="{ delay: 160 }">
+      <div class="empty-visual">
+        <img src="/images/artifacts.jpg" alt="" class="empty-img" />
+        <div class="empty-img-overlay" />
+      </div>
       <p class="empty-title">暂无收藏</p>
       <p class="empty-hint">去检索或识别页面收藏感兴趣的资源</p>
     </div>
@@ -97,13 +105,6 @@ const batchUnfavorite = async () => {
 </script>
 
 <style scoped lang="scss">
-.page-lead { margin-bottom: var(--space-lg);
-  .lead-badge { display: flex; align-items: center; gap: 8px; margin-bottom: 8px;
-    .badge-line { width: 20px; height: 1px; background: var(--cinnabar); opacity: 0.3; }
-    .badge-text { font-size: 11px; color: var(--cinnabar); letter-spacing: 3px; opacity: 0.7; }
-  }
-  .lead-title { font-family: var(--font-heading); font-size: clamp(22px,3vw,28px); font-weight: 700; color: var(--text-primary); letter-spacing: 4px; }
-}
 .batch-bar { display: flex; align-items: center; gap: var(--space-md); padding: 8px var(--space-lg); margin-bottom: var(--space-md); background: oklch(50% 0.16 28 / 0.04); border: 1px solid var(--cinnabar); border-radius: var(--radius-lg);
   .batch-count { font-size: 13px; font-weight: 600; color: var(--cinnabar); }
   .batch-action-btn, .batch-cancel-btn { all: unset; font-size: 12px; padding: 4px 14px; border-radius: var(--radius-md); cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
@@ -127,5 +128,37 @@ const batchUnfavorite = async () => {
   &:hover { color: var(--cinnabar); background: oklch(50% 0.16 28 / 0.06); } }
 .skeleton-area { .skeleton-row { height: 80px; margin-bottom: 8px; border-radius: var(--radius-lg); background: var(--bg-card); border: 1px solid var(--border-color); animation: shimmer 1.5s infinite; background-image: linear-gradient(90deg,var(--bg-card) 0%,var(--border-color) 50%,var(--bg-card) 100%); background-size: 200% 100%; } }
 @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
-.empty-state { text-align: center; padding: var(--space-3xl) 0; color: var(--text-tertiary); .empty-title { font-size: 16px; color: var(--text-regular); margin-bottom: 6px; } }
+.empty-state {
+    text-align: center;
+    padding: var(--space-xl) 0 var(--space-3xl);
+    color: var(--text-tertiary);
+
+    .empty-visual {
+      position: relative;
+      width: 240px;
+      height: 160px;
+      margin: 0 auto var(--space-xl);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      box-shadow: var(--shadow-md);
+
+      .empty-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .empty-img-overlay {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(to bottom, transparent 40%, var(--bg-body) 100%);
+      }
+    }
+
+    .empty-title {
+      font-size: 16px;
+      color: var(--text-regular);
+      margin-bottom: 6px;
+    }
+  }
 </style>

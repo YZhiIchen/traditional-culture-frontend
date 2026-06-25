@@ -1,7 +1,7 @@
 <template>
   <div class="upload">
     <!-- 页面标识 -->
-    <div class="page-lead animate-fade-in-up">
+    <div class="page-lead" v-reveal="{ delay: 80 }">
       <div class="lead-badge">
         <span class="badge-line" />
         <span class="badge-text">资源 · 上传</span>
@@ -16,7 +16,7 @@
     <!-- 主区域：非对称布局 -->
     <div class="upload-canvas">
       <!-- ↓↓↓ 左侧：上传面板 ↓↓↓ -->
-      <div class="canvas-main animate-fade-in-up delay-1">
+      <div class="canvas-main" v-reveal="{ delay: 160 }">
         <!-- Tab 切换 -->
         <div class="tab-bar">
           <button
@@ -181,7 +181,7 @@
       </div>
 
       <!-- ↓↓↓ 右侧：提示卡片（非对称） ↓↓↓ -->
-      <aside class="canvas-aside animate-fade-in-up delay-2">
+      <aside class="canvas-aside" v-reveal="{ delay: 240 }">
         <div class="aside-card">
           <div class="aside-card-top">
             <span class="aside-icon">
@@ -382,49 +382,6 @@ const goDetail = () => {
 // ═══════════════════════════════════════════
 
 .upload {
-  // ── 页面引导 ──
-  .page-lead {
-    margin-bottom: var(--space-xl);
-
-    .lead-badge {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-bottom: 8px;
-
-      .badge-line {
-        width: 20px;
-        height: 1px;
-        background: var(--cinnabar);
-        opacity: 0.3;
-      }
-
-      .badge-text {
-        font-size: 11px;
-        color: var(--cinnabar);
-        letter-spacing: 3px;
-        text-transform: uppercase;
-        opacity: 0.7;
-      }
-    }
-
-    .lead-title {
-      font-family: var(--font-heading);
-      font-size: clamp(22px, 3vw, 28px);
-      font-weight: 700;
-      color: var(--text-primary);
-      letter-spacing: 4px;
-    }
-
-    .lead-desc {
-      margin-top: 6px;
-      font-size: 13px;
-      color: var(--text-secondary);
-      max-width: 480px;
-      line-height: 1.6;
-    }
-  }
-
   // ── 非对称画布 ──
   .upload-canvas {
     display: grid;
@@ -504,14 +461,27 @@ const goDetail = () => {
     text-align: center;
     cursor: pointer;
     transition: all var(--transition-fast);
-    background: oklch(99% 0.002 55);
+    background:
+      linear-gradient(oklch(99% 0.002 55 / 0.92), oklch(99% 0.002 55 / 0.92)),
+      url('/images/painting-scroll.jpg') center 40% / cover no-repeat;
 
     [data-theme='dark'] & {
-      background: oklch(16% 0.003 55);
+      background:
+        linear-gradient(oklch(16% 0.003 55 / 0.92), oklch(16% 0.003 55 / 0.92)),
+        url('/images/painting-scroll.jpg') center 40% / cover no-repeat;
     }
 
     &:hover {
-      border-color: var(--ink-400);
+      border-color: var(--cinnabar);
+      background:
+        linear-gradient(oklch(99% 0.002 55 / 0.85), oklch(99% 0.002 55 / 0.85)),
+        url('/images/painting-scroll.jpg') center 40% / cover no-repeat;
+
+      [data-theme='dark'] & {
+        background:
+          linear-gradient(oklch(16% 0.003 55 / 0.85), oklch(16% 0.003 55 / 0.85)),
+          url('/images/painting-scroll.jpg') center 40% / cover no-repeat;
+      }
     }
 
     &.has-file {
@@ -519,6 +489,11 @@ const goDetail = () => {
       border-color: var(--border-color);
       cursor: default;
       padding: var(--space-md);
+      background: oklch(99% 0.002 55);
+
+      [data-theme='dark'] & {
+        background: oklch(16% 0.003 55);
+      }
     }
   }
 
@@ -935,19 +910,6 @@ const goDetail = () => {
   // 移动端适配
   // ═══════════════════════════════════════
   @media (max-width: 768px) {
-    .page-lead {
-      margin-bottom: var(--space-lg);
-
-      .lead-title {
-        font-size: 22px;
-        letter-spacing: 2px;
-      }
-
-      .lead-desc {
-        font-size: 12px;
-      }
-    }
-
     .tab-bar {
       .tab-item {
         padding: 10px 14px;

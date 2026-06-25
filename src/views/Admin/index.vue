@@ -1,16 +1,20 @@
 <template>
   <div class="admin">
-    <div class="page-lead animate-fade-in-up">
-      <div class="lead-badge">
-        <span class="badge-line" />
-        <span class="badge-text">管理 · 用户</span>
-        <span class="badge-line" />
+    <div class="page-hero" v-reveal="{ delay: 0 }">
+      <img src="/images/bg-admin.jpg" alt="" class="page-hero-bg" />
+      <div class="page-hero-overlay" />
+      <div class="page-hero-content">
+        <div class="hero-badge">
+          <span class="hero-badge-line" />
+          <span class="hero-badge-text">管理 · 用户</span>
+          <span class="hero-badge-line" />
+        </div>
+        <h1 class="hero-title">用户管理</h1>
+        <p class="hero-desc">查看和管理平台注册用户</p>
       </div>
-      <h1 class="lead-title">用户管理</h1>
-      <p class="lead-desc">查看和管理平台注册用户</p>
     </div>
 
-    <div class="admin-card animate-fade-in-up delay-1">
+    <div class="admin-card" v-reveal="{ delay: 80 }">
       <table class="user-table">
         <thead>
           <tr>
@@ -66,18 +70,6 @@ onMounted(async () => {
 
 <style scoped lang="scss">
 .admin {
-  .page-lead {
-    margin-bottom: var(--space-lg);
-
-    .lead-badge {
-      display: flex; align-items: center; gap: 8px; margin-bottom: 8px;
-      .badge-line { width: 20px; height: 1px; background: var(--cinnabar); opacity: 0.3; }
-      .badge-text { font-size: 11px; color: var(--cinnabar); letter-spacing: 3px; opacity: 0.7; }
-    }
-    .lead-title { font-family: var(--font-heading); font-size: clamp(22px,3vw,28px); font-weight: 700; color: var(--text-primary); letter-spacing: 4px; }
-    .lead-desc { margin-top: 6px; font-size: 13px; color: var(--text-secondary); }
-  }
-
   .admin-card {
     background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-xl);
     overflow: hidden; box-shadow: var(--shadow-sm);
