@@ -95,7 +95,7 @@
 
         <div class="featured-grid" v-if="allFeatured.length">
           <div
-            v-for="(item, idx) in allFeatured"
+            v-for="(item, idx) in pagedFeatured"
             :key="item.id"
             class="featured-card"
             v-reveal="{ delay: 60 * idx }"
@@ -126,6 +126,13 @@
         <div v-else class="featured-empty">
           <span>暂无符合条件的推荐内容</span>
           <button class="reset-btn" @click="activeDynasty = null; activeCategory = null; loadFeatured()">重置筛选</button>
+        </div>
+
+        <!-- 分页 -->
+        <div v-if="allFeatured.length > featuredPageSize" class="featured-pagination">
+          <button class="page-btn" :disabled="featuredPage === 1" @click="featuredPage--">‹ 上一页</button>
+          <span class="page-info">{{ featuredPage }} / {{ featuredTotalPages }}</span>
+          <button class="page-btn" :disabled="featuredPage === featuredTotalPages" @click="featuredPage++">下一页 ›</button>
         </div>
       </div>
 
@@ -243,7 +250,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onActivated, onDeactivated } from 'vue'
+import { ref, computed, onMounted, onActivated, onDeactivated, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import request from '@/utils/request'
 
@@ -305,6 +312,20 @@ interface FeaturedItem {
 }
 
 const allFeatured = ref<FeaturedItem[]>([])
+
+// ── 精选推荐分页 ──
+const featuredPageSize = 8
+const featuredPage = ref(1)
+const featuredTotalPages = computed(() => Math.max(1, Math.ceil(allFeatured.value.length / featuredPageSize)))
+const pagedFeatured = computed(() => {
+  const start = (featuredPage.value - 1) * featuredPageSize
+  return allFeatured.value.slice(start, start + featuredPageSize)
+})
+
+// 筛选变化时重置分页
+watch([() => activeDynasty.value, () => activeCategory.value], () => {
+  featuredPage.value = 1
+})
 
 // ── 文化词云（真实数据）──
 const wordCloud = ref<{ text: string; size: number; opacity: number; color: string }[]>([])
@@ -1085,6 +1106,43 @@ onDeactivated(() => {
           color: #fff;
           border-color: var(--cinnabar);
         }
+      }
+    }
+
+    // ── 精选推荐分页 ──
+    .featured-pagination {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: var(--space-md);
+      padding: var(--space-lg) 0;
+
+      .page-btn {
+        all: unset;
+        font-size: 13px;
+        color: var(--text-secondary);
+        cursor: pointer;
+        padding: 6px 16px;
+        border-radius: var(--radius-md);
+        border: 1px solid var(--border-color);
+        transition: all var(--transition-fast);
+
+        &:hover:not(:disabled) {
+          color: var(--cinnabar);
+          border-color: var(--cinnabar);
+        }
+
+        &:disabled {
+          opacity: 0.4;
+          cursor: not-allowed;
+        }
+      }
+
+      .page-info {
+        font-size: 12px;
+        color: var(--text-tertiary);
+        min-width: 60px;
+        text-align: center;
       }
     }
 

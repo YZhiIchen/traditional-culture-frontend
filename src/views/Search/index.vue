@@ -66,10 +66,10 @@
       <!-- 结果列表 -->
       <div v-else class="result-list">
         <div
-          v-for="(item, idx) in items"
+          v-for="(item, idx) in pagedItems"
           :key="idx"
           class="result-item animate-fade-in-up"
-          :style="{ animationDelay: `${0.1 + idx * 0.07}s` }"
+          :style="{ animationDelay: `${0.1 + (idx % searchPageSize) * 0.07}s` }"
           @click="goDetail(item)"
         >
           <div class="item-icon">
@@ -105,6 +105,13 @@
         </div>
       </div>
 
+      <!-- 分页 -->
+      <div v-if="items.length > searchPageSize" class="result-pagination">
+        <button class="page-btn" :disabled="searchPage === 1" @click="searchPage--">‹ 上一页</button>
+        <span class="page-info">{{ searchPage }} / {{ searchTotalPages }}</span>
+        <button class="page-btn" :disabled="searchPage === searchTotalPages" @click="searchPage++">下一页 ›</button>
+      </div>
+
       <!-- 搜索中占位 -->
       <div v-if="searching" class="result-searching">
         <div class="searching-dot" />
@@ -127,7 +134,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { searchApi } from '@/api/search'
@@ -158,6 +165,20 @@ interface ResultItem {
 
 const items = ref<ResultItem[]>([])
 
+// ── 检索结果分页 ──
+const searchPageSize = 10
+const searchPage = ref(1)
+const searchTotalPages = computed(() => Math.max(1, Math.ceil(items.value.length / searchPageSize)))
+const pagedItems = computed(() => {
+  const start = (searchPage.value - 1) * searchPageSize
+  return items.value.slice(start, start + searchPageSize)
+})
+
+// 关键词变化时重置分页
+watch(keyword, () => {
+  searchPage.value = 1
+})
+
 const handleSearch = async () => {
   const q = keyword.value.trim()
   if (!q) {
@@ -167,9 +188,10 @@ const handleSearch = async () => {
 
   searching.value = true
   hasSearched.value = true
+  searchPage.value = 1
 
   try {
-    const res = await searchApi({ keyword: q, page: 1, pageSize: 20 })
+    const res = await searchApi({ keyword: q, page: 1, pageSize: 100 })
     items.value = (res.list || []).map((r: any) => ({
       id: r.id,
       title: r.title || '',
@@ -434,6 +456,43 @@ const goDetail = (item: ResultItem) => {
       @keyframes pulse {
         0%, 100% { opacity: 0.3; transform: scale(0.8); }
         50% { opacity: 1; transform: scale(1.2); }
+      }
+    }
+
+    // ── 分页 ──
+    .result-pagination {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: var(--space-md);
+      padding: var(--space-xl) 0;
+
+      .page-btn {
+        all: unset;
+        font-size: 13px;
+        color: var(--text-secondary);
+        cursor: pointer;
+        padding: 6px 16px;
+        border-radius: var(--radius-md);
+        border: 1px solid var(--border-color);
+        transition: all var(--transition-fast);
+
+        &:hover:not(:disabled) {
+          color: var(--cinnabar);
+          border-color: var(--cinnabar);
+        }
+
+        &:disabled {
+          opacity: 0.4;
+          cursor: not-allowed;
+        }
+      }
+
+      .page-info {
+        font-size: 12px;
+        color: var(--text-tertiary);
+        min-width: 60px;
+        text-align: center;
       }
     }
   }

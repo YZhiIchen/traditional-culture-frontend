@@ -25,9 +25,32 @@
             </svg>
             上传资源
           </router-link>
+          <router-link to="/search" class="hero-btn hero-btn-ghost">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8" />
+              <line x1="21" y1="21" x2="16.65" y2="16.65" />
+            </svg>
+            检索资源
+          </router-link>
           <router-link to="/explore" class="hero-btn hero-btn-ghost">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10" />
+              <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" />
+            </svg>
             探索发现
           </router-link>
+        </div>
+      </div>
+      <!-- 朝代分布竖条：紧贴文字按钮右侧，新朝代向右生长 -->
+      <div class="hero-dynasty-vertical" v-if="dynasties.length">
+        <div class="dynasty-vertical-title">全局朝代分布</div>
+        <div class="dynasty-vertical-bars">
+          <div class="vertical-dynasty-item" v-for="d in dynasties" :key="d.name">
+            <div class="vertical-track">
+              <div class="vertical-fill" :style="{ height: `${d.pct}%` }" />
+            </div>
+            <span class="vertical-name">{{ d.name }}</span>
+          </div>
         </div>
       </div>
     </div>
@@ -102,49 +125,6 @@
             </div>
           </div>
         </section>
-
-        <!-- 快捷操作 -->
-        <div class="quick-actions">
-          <router-link to="/upload" class="quick-card">
-            <div class="quick-icon">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
-                   stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
-                   stroke-linejoin="round">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                <polyline points="17 8 12 3 7 8" />
-                <line x1="12" y1="3" x2="12" y2="15" />
-              </svg>
-            </div>
-            <span class="quick-label">上传资源</span>
-            <span class="quick-hint">图片 · 文本</span>
-          </router-link>
-
-          <router-link to="/search" class="quick-card">
-            <div class="quick-icon">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
-                   stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
-                   stroke-linejoin="round">
-                <circle cx="11" cy="11" r="8" />
-                <line x1="21" y1="21" x2="16.65" y2="16.65" />
-              </svg>
-            </div>
-            <span class="quick-label">检索资源</span>
-            <span class="quick-hint">关键词 · 筛选</span>
-          </router-link>
-
-          <router-link to="/explore" class="quick-card">
-            <div class="quick-icon">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
-                   stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
-                   stroke-linejoin="round">
-                <circle cx="12" cy="12" r="10" />
-                <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" />
-              </svg>
-            </div>
-            <span class="quick-label">知识发现</span>
-            <span class="quick-hint">专题 · 图谱</span>
-          </router-link>
-        </div>
       </div>
 
       <!-- 右栏：侧边信息 -->
@@ -184,24 +164,6 @@
                     @click="goSearch(tag.name)">
                 {{ tag.name }}
               </span>
-            </div>
-          </div>
-        </section>
-
-        <!-- 朝代分布 -->
-        <section class="section-card">
-          <div class="section-head">
-            <span class="section-head-title">全局朝代分布</span>
-          </div>
-          <div class="section-body">
-            <div class="dynasty-bars">
-              <div class="dynasty-bar-row" v-for="d in dynasties" :key="d.name">
-                <span class="dynasty-name">{{ d.name }}</span>
-                <span class="dynasty-track">
-                  <span class="dynasty-fill" :style="{ width: `${d.pct}%` }" />
-                </span>
-                <span class="dynasty-num">{{ d.count }}</span>
-              </div>
             </div>
           </div>
         </section>
@@ -475,6 +437,7 @@ onUnmounted(() => {
     z-index: 1;
     padding: var(--space-2xl) var(--space-2xl);
     max-width: 600px;
+    flex-shrink: 0;
 
     @media (max-width: 768px) {
       padding: var(--space-xl) var(--space-lg);
@@ -522,44 +485,127 @@ onUnmounted(() => {
 
     .hero-actions {
       display: flex;
-      gap: var(--space-md);
+      gap: var(--space-sm);
       flex-wrap: wrap;
+    }
+  }
 
-      .hero-btn {
-        display: inline-flex;
-        align-items: center;
+  // ── 朝代分布竖条：紧贴文字右侧，新朝代向右生长 ──
+  .hero-dynasty-vertical {
+    position: relative;
+    z-index: 2;
+    flex-shrink: 0;
+    opacity: 0.5;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 10px 14px;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    border-radius: var(--radius-md);
+    background: rgba(0, 0, 0, 0.15);
+    backdrop-filter: blur(4px);
+    margin-left: var(--space-lg);
+    align-self: flex-end;
+    margin-bottom: var(--space-lg);
+
+    @media (max-width: 1024px) {
+      padding: 8px 10px;
+      margin-left: var(--space-md);
+      margin-bottom: var(--space-md);
+    }
+
+    @media (max-width: 768px) {
+      display: none;
+    }
+
+    .dynasty-vertical-title {
+      font-family: var(--font-heading);
+      font-size: 11px;
+      color: #fff;
+      letter-spacing: 3px;
+      font-weight: 600;
+      text-align: center;
+    }
+
+    .dynasty-vertical-bars {
+      display: flex;
+      gap: 10px;
+      align-items: flex-end;
+      justify-content: center;
+
+      @media (max-width: 1024px) {
         gap: 8px;
-        padding: 0 24px;
-        height: 46px;
-        font-size: 14px;
-        letter-spacing: 2px;
-        border-radius: var(--radius-md);
-        text-decoration: none;
-        transition: all var(--transition-fast);
-        font-family: var(--font-heading);
+      }
+    }
 
-        &-primary {
-          background: linear-gradient(135deg, var(--cinnabar), oklch(42% 0.14 28));
-          color: #fff;
-          box-shadow: 0 4px 16px oklch(12% 0.02 55 / 0.3);
+    .vertical-dynasty-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      height: 100px;
+      width: 22px;
 
-          &:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 24px oklch(12% 0.02 55 / 0.4);
-          }
-        }
+      .vertical-track {
+        width: 6px;
+        height: 100%;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 3px;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column-reverse;
+      }
 
-        &-ghost {
-          background: oklch(95% 0.005 55 / 0.12);
-          color: #fff;
-          border: 1px solid oklch(95% 0.005 55 / 0.25);
-          backdrop-filter: blur(8px);
+      .vertical-fill {
+        width: 100%;
+        border-radius: 3px;
+        background: linear-gradient(0deg, oklch(55% 0.16 28 / 0.6), var(--cinnabar));
+        transition: height 0.8s var(--ease-out-expo);
+      }
 
-          &:hover {
-            background: oklch(95% 0.005 55 / 0.2);
-            transform: translateY(-2px);
-          }
-        }
+      .vertical-name {
+        font-size: 10px;
+        color: #fff;
+        white-space: nowrap;
+      }
+    }
+  }
+
+  // ── Hero 按钮共用样式 ──
+  .hero-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0 18px;
+    height: 42px;
+    font-size: 13px;
+    letter-spacing: 1px;
+    border-radius: var(--radius-md);
+    text-decoration: none;
+    transition: all var(--transition-fast);
+    font-family: var(--font-heading);
+    white-space: nowrap;
+
+    &-primary {
+      background: linear-gradient(135deg, var(--cinnabar), oklch(42% 0.14 28));
+      color: #fff;
+      box-shadow: 0 4px 16px oklch(12% 0.02 55 / 0.3);
+
+      &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 24px oklch(12% 0.02 55 / 0.4);
+      }
+    }
+
+    &-ghost {
+      background: oklch(95% 0.005 55 / 0.12);
+      color: #fff;
+      border: 1px solid oklch(95% 0.005 55 / 0.25);
+      backdrop-filter: blur(8px);
+
+      &:hover {
+        background: oklch(95% 0.005 55 / 0.2);
+        transform: translateY(-2px);
       }
     }
   }
@@ -845,63 +891,6 @@ onUnmounted(() => {
     50% { opacity: 1; }
   }
 
-  // ── 快捷操作 ──
-  .quick-actions {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: var(--space-md);
-
-    .quick-card {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 10px;
-      padding: var(--space-lg) var(--space-md);
-      background: var(--bg-card);
-      border: 1px solid var(--border-color);
-      border-radius: var(--radius-lg);
-      text-decoration: none;
-      cursor: pointer;
-      transition: all var(--transition-fast);
-      box-shadow: var(--shadow-sm);
-
-      &:hover {
-        border-color: var(--cinnabar);
-        box-shadow: 0 0 0 2px oklch(50% 0.16 28 / 0.08);
-        transform: translateY(-2px);
-
-        .quick-icon {
-          transform: scale(1.08);
-          color: var(--cinnabar);
-        }
-      }
-
-      .quick-icon {
-        width: 48px;
-        height: 48px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: var(--radius-lg);
-        background: oklch(50% 0.16 28 / 0.06);
-        color: var(--text-secondary);
-        transition: all var(--transition-spring);
-      }
-
-      .quick-label {
-        font-size: 14px;
-        font-weight: 600;
-        color: var(--text-primary);
-        letter-spacing: 1px;
-      }
-
-      .quick-hint {
-        font-size: 11px;
-        color: var(--text-tertiary);
-      }
-    }
-  }
-
   // ── 右侧栏 ──
   .grid-aside {
     position: sticky;
@@ -955,51 +944,6 @@ onUnmounted(() => {
       &:hover {
         transform: scale(1.15);
         background: oklch(50% 0.16 28 / 0.06);
-      }
-    }
-  }
-
-  // ── 朝代分布 ──
-  .dynasty-bars {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-
-    .dynasty-bar-row {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-
-      .dynasty-name {
-        width: 32px;
-        font-size: 11px;
-        color: var(--text-secondary);
-        text-align: right;
-        flex-shrink: 0;
-      }
-
-      .dynasty-track {
-        flex: 1;
-        height: 6px;
-        background: var(--border-color);
-        border-radius: 3px;
-        overflow: hidden;
-
-        .dynasty-fill {
-          display: block;
-          height: 100%;
-          border-radius: 3px;
-          background: linear-gradient(90deg, oklch(55% 0.16 28 / 0.5), var(--cinnabar));
-          transition: width 0.8s var(--ease-out-expo);
-        }
-      }
-
-      .dynasty-num {
-        width: 24px;
-        font-size: 10px;
-        color: var(--text-tertiary);
-        text-align: right;
-        flex-shrink: 0;
       }
     }
   }
@@ -1089,22 +1033,6 @@ onUnmounted(() => {
       .recent-icon {
         width: 30px;
         height: 30px;
-      }
-    }
-
-    .quick-actions {
-      grid-template-columns: 1fr;
-      gap: var(--space-sm);
-
-      .quick-card {
-        flex-direction: row;
-        padding: var(--space-md);
-        gap: 12px;
-
-        .quick-icon {
-          width: 40px;
-          height: 40px;
-        }
       }
     }
 
