@@ -41,15 +41,23 @@
           </router-link>
         </div>
       </div>
-      <!-- 朝代分布竖条：紧贴文字按钮右侧，新朝代向右生长 -->
-      <div class="hero-dynasty-vertical" v-if="dynasties.length">
-        <div class="dynasty-vertical-title">全局朝代分布</div>
-        <div class="dynasty-vertical-bars">
-          <div class="vertical-dynasty-item" v-for="d in dynasties" :key="d.name">
-            <div class="vertical-track">
-              <div class="vertical-fill" :style="{ height: `${d.pct}%` }" />
+      <!-- 朝代分布环形图：紧贴文字按钮右侧 -->
+      <div class="hero-dynasty-chart" v-if="dynasties.length">
+        <div class="dynasty-chart-title">全局朝代分布</div>
+        <div class="dynasty-chart-body">
+          <div ref="dynastyChartRef" class="dynasty-chart-canvas" />
+          <div class="dynasty-chart-legend">
+            <div
+              v-for="(d, i) in dynastyChartData"
+              :key="d.name"
+              class="legend-item"
+              :class="{ 'is-zero': d.value === 0, 'is-unselected': !selectedDynasties.has(d.name) }"
+              @click="toggleDynasty(d.name)"
+            >
+              <span class="legend-dot" :style="{ background: dynastyColors[i % dynastyColors.length] }" />
+              <span class="legend-name">{{ d.name }}</span>
+              <span class="legend-value">{{ d.value }}</span>
             </div>
-            <span class="vertical-name">{{ d.name }}</span>
           </div>
         </div>
       </div>
@@ -179,8 +187,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, onActivated, onDeactivated } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted, onActivated, onDeactivated, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
+import * as echarts from 'echarts'
 import request from '@/utils/request'
 
 const router = useRouter()
@@ -245,6 +254,110 @@ const tagColorPool = ['var(--celadon)', 'var(--vermillion)', 'var(--gold)', 'var
 
 // ── 朝代分布 ──
 const dynasties = ref<{ name: string; count: number; pct: number }[]>([])
+
+// ── 朝代分布环形图 ──
+const dynastyChartRef = ref<HTMLElement | null>(null)
+let dynastyChart: echarts.ECharts | null = null
+
+// 可选择显示/隐藏的朝代
+const selectedDynasties = ref<Set<string>>(new Set())
+
+// 仿 deck 配色：朱砂、青瓷、金、天青等
+const dynastyColors = [
+  '#c0392b', '#4a7c59', '#f9a620', '#3b6cff',
+  '#b7472a', '#8c9e8c', '#d4a76a', '#c4705a'
+]
+
+// 图表数据（处理占比为0的朝代）
+const dynastyChartData = computed(() => {
+  return dynasties.value.map(d => ({
+    name: d.name,
+    value: d.count || 0
+  }))
+})
+
+// 数据加载后默认全选
+watch(dynastyChartData, (data) => {
+  if (data.length && selectedDynasties.value.size === 0) {
+    selectedDynasties.value = new Set(data.map(d => d.name))
+  }
+}, { immediate: true })
+
+// 是否有非零数据
+const hasNonZeroDynasty = computed(() => dynastyChartData.value.some(d => d.value > 0))
+
+// 切换朝代选择
+function toggleDynasty(name: string) {
+  if (selectedDynasties.value.has(name)) {
+    // 至少保留一个
+    if (selectedDynasties.value.size > 1) {
+      selectedDynasties.value.delete(name)
+    }
+  } else {
+    selectedDynasties.value.add(name)
+  }
+  // 触发响应式更新
+  selectedDynasties.value = new Set(selectedDynasties.value)
+  renderDynastyChart()
+}
+
+function renderDynastyChart() {
+  if (!dynastyChartRef.value) return
+
+  if (!dynastyChart) {
+    dynastyChart = echarts.init(dynastyChartRef.value, undefined, { renderer: 'svg' })
+  }
+
+  // 按选择状态过滤数据
+  const filteredData = dynastyChartData.value.filter(d => selectedDynasties.value.has(d.name))
+  const hasData = filteredData.some(d => d.value > 0)
+
+  // 全部为0或无选中时展示占位环
+  const pieData = hasData
+    ? filteredData
+    : [{ name: '暂无数据', value: 1 }]
+
+  dynastyChart.setOption({
+    color: hasData
+      ? dynastyChartData.value
+          .filter(d => selectedDynasties.value.has(d.name))
+          .map((_, i) => dynastyColors[i % dynastyColors.length])
+      : ['rgba(255,255,255,0.15)'],
+    tooltip: {
+      trigger: 'item',
+      formatter: hasData ? '{b}: {c} ({d}%)' : '暂无数据',
+      backgroundColor: 'rgba(20,20,20,0.85)',
+      borderColor: 'rgba(255,255,255,0.15)',
+      textStyle: { color: '#fff', fontSize: 12 }
+    },
+    series: [{
+      type: 'pie',
+      radius: ['50%', '75%'],
+      center: ['50%', '50%'],
+      avoidLabelOverlap: true,
+      label: { show: false },
+      emphasis: {
+        label: {
+          show: true,
+          fontSize: 13,
+          fontWeight: 'bold',
+          color: '#fff'
+        },
+        itemStyle: {
+          shadowBlur: 10,
+          shadowColor: 'rgba(0,0,0,0.3)'
+        }
+      },
+      labelLine: { show: false },
+      data: pieData
+    }]
+  })
+}
+
+// 数据变化时重绘
+watch(dynastyChartData, () => {
+  nextTick(() => renderDynastyChart())
+}, { deep: true })
 
 const formatTime = (ts: number) => {
   const diff = Date.now() - ts
@@ -355,6 +468,8 @@ const stopAutoRefresh = () => {
 onMounted(() => {
   loadData()
   startAutoRefresh()
+  nextTick(() => renderDynastyChart())
+  window.addEventListener('resize', onChartResize)
 })
 
 // 切回页面时：如果数据超过 2 分钟未刷新，立即静默刷新
@@ -363,6 +478,9 @@ onActivated(() => {
     loadData(true)
   }
   startAutoRefresh()
+  nextTick(() => {
+    if (dynastyChart) dynastyChart.resize()
+  })
 })
 
 // 切离页面时：暂停定时器，避免后台无效请求
@@ -371,8 +489,15 @@ onDeactivated(() => {
   stopAutoRefresh()
 })
 
+function onChartResize() {
+  dynastyChart?.resize()
+}
+
 onUnmounted(() => {
   stopAutoRefresh()
+  window.removeEventListener('resize', onChartResize)
+  dynastyChart?.dispose()
+  dynastyChart = null
 })
 </script>
 
@@ -490,28 +615,30 @@ onUnmounted(() => {
     }
   }
 
-  // ── 朝代分布竖条：紧贴文字右侧，新朝代向右生长 ──
-  .hero-dynasty-vertical {
+  // ── 朝代分布环形图：紧贴文字右侧 ──
+  .hero-dynasty-chart {
     position: relative;
     z-index: 2;
     flex-shrink: 0;
-    opacity: 0.5;
     display: flex;
     flex-direction: column;
-    gap: 10px;
-    padding: 10px 14px;
-    border: 1px solid rgba(255, 255, 255, 0.25);
+    gap: 8px;
+    padding: 12px 16px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
     border-radius: var(--radius-md);
-    background: rgba(0, 0, 0, 0.15);
-    backdrop-filter: blur(4px);
+    background: rgba(0, 0, 0, 0.08);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
     margin-left: var(--space-lg);
     align-self: flex-end;
     margin-bottom: var(--space-lg);
+    width: 220px;
 
     @media (max-width: 1024px) {
-      padding: 8px 10px;
+      padding: 10px 12px;
       margin-left: var(--space-md);
       margin-bottom: var(--space-md);
+      width: 200px;
     }
 
     @media (max-width: 768px) {
@@ -520,15 +647,10 @@ onUnmounted(() => {
       margin-bottom: 0;
       margin-top: var(--space-sm);
       align-self: stretch;
-      overflow-x: auto;
-      -webkit-overflow-scrolling: touch;
-
-      .dynasty-vertical-bars {
-        flex-wrap: nowrap;
-      }
+      width: 100%;
     }
 
-    .dynasty-vertical-title {
+    .dynasty-chart-title {
       font-family: var(--font-heading);
       font-size: 11px;
       color: #fff;
@@ -537,46 +659,105 @@ onUnmounted(() => {
       text-align: center;
     }
 
-    .dynasty-vertical-bars {
+    .dynasty-chart-body {
       display: flex;
       gap: 10px;
-      align-items: flex-end;
-      justify-content: center;
+      align-items: center;
 
-      @media (max-width: 1024px) {
-        gap: 8px;
+      @media (max-width: 768px) {
+        flex-direction: column;
       }
     }
 
-    .vertical-dynasty-item {
+    .dynasty-chart-canvas {
+      width: 90px;
+      height: 90px;
+      flex-shrink: 0;
+
+      @media (max-width: 1024px) {
+        width: 80px;
+        height: 80px;
+      }
+    }
+
+    .dynasty-chart-legend {
+      flex: 1;
       display: flex;
       flex-direction: column;
+      gap: 3px;
+      min-width: 0;
+      max-height: 110px;
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+
+      &::-webkit-scrollbar {
+        width: 3px;
+      }
+
+      &::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 2px;
+      }
+    }
+
+    .legend-item {
+      display: flex;
       align-items: center;
       gap: 6px;
-      height: 100px;
-      width: 22px;
+      font-size: 10px;
+      color: rgba(255, 255, 255, 0.85);
+      line-height: 1.4;
+      cursor: pointer;
+      padding: 2px 4px;
+      border-radius: 3px;
+      transition: all var(--transition-fast);
+      user-select: none;
 
-      .vertical-track {
-        width: 6px;
-        height: 100%;
-        background: rgba(255, 255, 255, 0.2);
-        border-radius: 3px;
-        overflow: hidden;
-        display: flex;
-        flex-direction: column-reverse;
+      &:hover {
+        background: rgba(255, 255, 255, 0.08);
       }
 
-      .vertical-fill {
-        width: 100%;
-        border-radius: 3px;
-        background: linear-gradient(0deg, oklch(55% 0.16 28 / 0.6), var(--cinnabar));
-        transition: height 0.8s var(--ease-out-expo);
+      &.is-zero {
+        opacity: 0.4;
+
+        .legend-value {
+          color: rgba(255, 255, 255, 0.5);
+        }
       }
 
-      .vertical-name {
-        font-size: 10px;
-        color: #fff;
+      &.is-unselected {
+        opacity: 0.35;
+
+        .legend-dot {
+          opacity: 0.3;
+        }
+
+        .legend-name {
+          text-decoration: line-through;
+          text-decoration-color: rgba(255, 255, 255, 0.3);
+        }
+      }
+
+      .legend-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 2px;
+        flex-shrink: 0;
+        transition: opacity var(--transition-fast);
+      }
+
+      .legend-name {
+        flex: 1;
         white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .legend-value {
+        font-weight: 600;
+        flex-shrink: 0;
+        color: #fff;
       }
     }
   }
