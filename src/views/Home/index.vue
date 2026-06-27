@@ -515,7 +515,17 @@ onUnmounted(() => {
     }
 
     @media (max-width: 768px) {
-      display: none;
+      margin-left: 0;
+      margin-right: 0;
+      margin-bottom: 0;
+      margin-top: var(--space-sm);
+      align-self: stretch;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+
+      .dynasty-vertical-bars {
+        flex-wrap: nowrap;
+      }
     }
 
     .dynasty-vertical-title {
@@ -973,23 +983,33 @@ onUnmounted(() => {
   @media (max-width: 768px) {
     .hero-section {
       min-height: 240px;
+      flex-direction: column;
+      align-items: stretch;
     }
 
     .hero-content {
       .hero-title {
-        font-size: 24px;
+        font-size: 22px;
         letter-spacing: 3px;
       }
 
       .hero-desc {
-        font-size: 13px;
+        font-size: 12px;
       }
 
       .hero-actions {
+        gap: 8px;
+
         .hero-btn {
-          height: 40px;
-          padding: 0 18px;
-          font-size: 13px;
+          height: 38px;
+          padding: 0 14px;
+          font-size: 12px;
+          gap: 4px;
+
+          svg {
+            width: 14px;
+            height: 14px;
+          }
         }
       }
     }
@@ -1001,16 +1021,26 @@ onUnmounted(() => {
     }
 
     .stat-card {
-      padding: var(--space-md);
-      gap: 10px;
+      padding: var(--space-sm) var(--space-md);
+      gap: 8px;
+      min-width: 0;
 
       .stat-icon {
-        width: 36px;
-        height: 36px;
+        width: 32px;
+        height: 32px;
+        flex-shrink: 0;
       }
 
-      .stat-body .stat-value {
-        font-size: 18px;
+      .stat-body {
+        min-width: 0;
+
+        .stat-value {
+          font-size: 16px;
+        }
+
+        .stat-label {
+          font-size: 10px;
+        }
       }
     }
 
@@ -1049,6 +1079,17 @@ onUnmounted(() => {
   @media (max-width: 480px) {
     .stats-row {
       grid-template-columns: 1fr;
+    }
+
+    .hero-content {
+      .hero-actions {
+        flex-direction: column;
+
+        .hero-btn {
+          width: 100%;
+          justify-content: center;
+        }
+      }
     }
   }
 }

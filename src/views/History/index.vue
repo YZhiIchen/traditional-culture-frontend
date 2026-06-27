@@ -888,6 +888,180 @@ watch([page, activeType], () => {
   }
 }
 
+// ═══════════════════════════════════════
+// 移动端适配 — 精简横向条目
+// ═══════════════════════════════════════
+@media (max-width: 768px) {
+  .history {
+    // Hero 缩小
+    .page-hero {
+      min-height: 160px;
+
+      .page-hero-content {
+        padding: var(--space-lg);
+
+        .hero-title {
+          font-size: 22px;
+          letter-spacing: 3px;
+        }
+
+        .hero-desc {
+          font-size: 12px;
+        }
+      }
+    }
+
+    // 筛选栏纵向排列
+    .filter-bar {
+      flex-direction: column;
+      align-items: stretch;
+      gap: var(--space-sm);
+
+      .filter-group {
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+
+      .search-input-wrap {
+        width: 100%;
+
+        .search-input {
+          width: 100%;
+        }
+      }
+    }
+
+    // 批量操作栏换行
+    .batch-bar {
+      flex-wrap: wrap;
+      gap: 8px;
+      padding: 8px var(--space-md);
+
+      .batch-count {
+        width: 100%;
+      }
+    }
+
+    // ── 核心改造：卡片变为精简横向条目 ──
+    .history-card {
+      padding: 8px 10px;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 6px;
+      border-radius: var(--radius-md);
+
+      // 缩略图缩小
+      .card-thumb {
+        width: 36px;
+        height: 36px;
+        border-radius: var(--radius-sm);
+
+        svg {
+          width: 18px;
+          height: 18px;
+        }
+      }
+
+      // 信息区精简：单行标题 + 单行元数据
+      .card-body {
+        .card-top {
+          margin-bottom: 2px;
+          gap: 6px;
+
+          .card-title {
+            font-size: 13px;
+          }
+
+          .card-dynasty {
+            font-size: 9px;
+            padding: 1px 6px;
+          }
+
+          .card-type-badge {
+            font-size: 9px;
+            padding: 1px 6px;
+          }
+        }
+
+        // 元数据单行
+        .card-meta {
+          flex-wrap: nowrap;
+          overflow: hidden;
+          gap: 8px;
+
+          .meta-item {
+            font-size: 10px;
+            white-space: nowrap;
+
+            svg {
+              width: 10px;
+              height: 10px;
+            }
+          }
+        }
+
+        // 标签隐藏，节省空间
+        .card-tags {
+          display: none;
+        }
+      }
+
+      // 置信度环缩小
+      .card-score {
+        .score-ring {
+          width: 32px;
+          height: 32px;
+
+          svg {
+            width: 32px;
+            height: 32px;
+          }
+
+          .score-text {
+            font-size: 10px;
+          }
+        }
+      }
+
+      // 操作按钮精简
+      .card-actions {
+        gap: 2px;
+
+        .card-action-btn {
+          width: 28px;
+          height: 28px;
+
+          svg {
+            width: 12px;
+            height: 12px;
+          }
+        }
+      }
+    }
+
+    // 空态
+    .empty-state {
+      padding: var(--space-lg) 0 var(--space-xl);
+
+      .empty-visual {
+        width: 180px;
+        height: 120px;
+      }
+    }
+
+    // 分页
+    .pagination-row {
+      flex-wrap: wrap;
+      gap: 8px;
+
+      .page-btn {
+        padding: 6px 12px;
+        font-size: 12px;
+      }
+    }
+  }
+}
+
 // ── 动画 ──
 @keyframes fadeInUp {
   from { opacity: 0; transform: translateY(12px); }

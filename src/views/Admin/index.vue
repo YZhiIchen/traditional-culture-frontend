@@ -99,4 +99,40 @@ onMounted(async () => {
 
   .admin-loading { text-align: center; padding: var(--space-2xl); color: var(--text-secondary); font-size: 14px; }
 }
+
+// ═══════════════════════════════════════
+// 移动端适配
+// ═══════════════════════════════════════
+@media (max-width: 768px) {
+  .page-hero {
+    min-height: 160px;
+
+    .page-hero-content {
+      padding: var(--space-lg);
+
+      .hero-title {
+        font-size: 22px;
+        letter-spacing: 3px;
+      }
+
+      .hero-desc {
+        font-size: 12px;
+      }
+    }
+  }
+
+  .admin-card {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+
+    .user-table {
+      min-width: 600px;
+
+      th, td {
+        padding: 8px var(--space-md);
+        font-size: 12px;
+      }
+    }
+  }
+}
 </style>

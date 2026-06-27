@@ -161,4 +161,79 @@ const batchUnfavorite = async () => {
       margin-bottom: 6px;
     }
   }
+
+// ═══════════════════════════════════════
+// 移动端适配
+// ═══════════════════════════════════════
+@media (max-width: 768px) {
+  .page-hero {
+    min-height: 160px;
+
+    .page-hero-content {
+      padding: var(--space-lg);
+
+      .hero-title {
+        font-size: 22px;
+        letter-spacing: 3px;
+      }
+
+      .hero-desc {
+        font-size: 12px;
+      }
+    }
+  }
+
+  .fav-grid {
+    grid-template-columns: 1fr;
+    gap: var(--space-sm);
+  }
+
+  .fav-card {
+    padding: var(--space-sm) var(--space-md);
+    gap: 8px;
+
+    .fav-body {
+      gap: var(--space-sm);
+
+      .fav-thumb {
+        width: 36px;
+        height: 36px;
+
+        .fav-icon {
+          font-size: 16px;
+        }
+      }
+
+      .fav-info {
+        .fav-title {
+          font-size: 13px;
+        }
+
+        .fav-meta {
+          font-size: 11px;
+        }
+
+        .fav-tags {
+          .mini-tag {
+            font-size: 9px;
+            padding: 1px 5px;
+          }
+        }
+      }
+    }
+  }
+
+  .batch-bar {
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 8px var(--space-md);
+  }
+
+  .empty-state {
+    .empty-visual {
+      width: 180px;
+      height: 120px;
+    }
+  }
+}
 </style>

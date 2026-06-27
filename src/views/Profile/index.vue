@@ -1172,4 +1172,52 @@ const handleDeleteAccount = async () => {
 .crop-btn.confirm:hover {
   background: #2563eb;
 }
+
+// ═══════════════════════════════════════
+// 移动端适配
+// ═══════════════════════════════════════
+@media (max-width: 768px) {
+  .page-hero {
+    min-height: 160px;
+
+    .page-hero-content {
+      padding: var(--space-lg);
+
+      .hero-title {
+        font-size: 22px;
+        letter-spacing: 3px;
+      }
+
+      .hero-desc {
+        font-size: 12px;
+      }
+    }
+  }
+
+  .profile-grid {
+    .profile-aside {
+      .avatar-card {
+        padding: var(--space-md);
+
+        .avatar-box {
+          .avatar-wrap {
+            width: 64px;
+            height: 64px;
+          }
+        }
+      }
+    }
+  }
+
+  .info-grid {
+    grid-template-columns: 1fr !important;
+
+    .info-cell {
+      &:nth-child(odd), &:nth-child(even) {
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+      }
+    }
+  }
+}
 </style>

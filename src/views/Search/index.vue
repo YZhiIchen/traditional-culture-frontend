@@ -558,6 +558,7 @@ const goDetail = (item: ResultItem) => {
     .search-field {
       flex-wrap: wrap;
       padding: 8px;
+      box-sizing: border-box;
 
       .search-icon {
         padding: 0 8px 0 10px;
@@ -565,44 +566,62 @@ const goDetail = (item: ResultItem) => {
 
       .search-input {
         height: 44px;
-        font-size: 16px; // 防止 iOS Safari 聚焦时自动放大
-        flex: 1 1 calc(100% - 40px);
+        font-size: 16px;
+        flex: 1 1 100%;
+        min-width: 0;
       }
 
       .search-submit {
         width: 100%;
+        box-sizing: border-box;
         height: 44px;
         justify-content: center;
         margin-right: 0;
+        margin-left: 0;
         margin-top: 4px;
+        padding: 0;
       }
     }
 
     .result-item {
       padding: var(--space-md);
-      gap: 12px;
+      gap: 10px;
+      max-width: 100%;
+      overflow: hidden;
 
       .item-icon {
-        width: 36px;
-        height: 36px;
+        width: 32px;
+        height: 32px;
+        flex-shrink: 0;
       }
 
       .item-body {
+        min-width: 0;
+        overflow: hidden;
+
         .item-top {
           flex-wrap: wrap;
           gap: 6px;
 
           .item-title {
-            font-size: 14px;
+            font-size: 13px;
+            max-width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
           }
         }
 
         .item-summary {
           font-size: 12px;
-          -webkit-line-clamp: 3;
+          -webkit-line-clamp: 2;
+          word-break: break-all;
         }
 
         .item-meta {
+          flex-wrap: wrap;
+          gap: 6px;
+
           .meta-link {
             opacity: 1;
             transform: none;
@@ -612,7 +631,34 @@ const goDetail = (item: ResultItem) => {
     }
 
     .search-guide {
-      padding: var(--space-2xl) 0;
+      padding: var(--space-xl) 0;
+
+      .guide-visual {
+        width: 200px;
+        height: 130px;
+      }
+    }
+
+    .result-pagination {
+      flex-wrap: wrap;
+      gap: 8px;
+
+      .page-btn {
+        padding: 6px 12px;
+        font-size: 12px;
+      }
+    }
+  }
+
+  @media (max-width: 480px) {
+    .result-item {
+      .item-body {
+        .item-top {
+          .item-title {
+            font-size: 13px;
+          }
+        }
+      }
     }
   }
 }

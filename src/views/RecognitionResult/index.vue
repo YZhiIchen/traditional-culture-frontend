@@ -674,4 +674,67 @@ onMounted(() => fetchData())
   from { opacity: 0; transform: scale(0.95); }
   to { opacity: 1; transform: scale(1); }
 }
+
+// ═══════════════════════════════════════
+// 移动端适配
+// ═══════════════════════════════════════
+@media (max-width: 768px) {
+  .page-hero {
+    min-height: 160px;
+
+    .page-hero-content {
+      padding: var(--space-lg);
+
+      .hero-title {
+        font-size: 22px;
+        letter-spacing: 3px;
+      }
+
+      .hero-desc {
+        font-size: 12px;
+      }
+
+      .hero-actions {
+        flex-wrap: wrap;
+        gap: 6px;
+
+        .ghost-btn {
+          height: 34px;
+          padding: 0 12px;
+          font-size: 12px;
+        }
+      }
+    }
+  }
+
+  .detail-grid {
+    grid-template-columns: 1fr;
+    gap: var(--space-md);
+  }
+
+  .section-card {
+    .section-head {
+      padding: 10px var(--space-md);
+
+      .section-head-title {
+        font-size: 13px;
+      }
+    }
+
+    .section-body {
+      padding: var(--space-md);
+    }
+  }
+
+  .info-grid {
+    grid-template-columns: 1fr !important;
+
+    .info-cell {
+      &:nth-child(odd), &:nth-child(even) {
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+      }
+    }
+  }
+}
 </style>
